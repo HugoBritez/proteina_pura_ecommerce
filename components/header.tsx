@@ -35,6 +35,7 @@ export function Header({ cartItems = 0 }: HeaderProps) {
           {/* Desktop Navigation */}
           <NavigationMenu className="hidden lg:flex">
             <NavigationMenuList>
+              {/*}
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="font-roboto font-medium">Productos</NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -76,6 +77,15 @@ export function Header({ cartItems = 0 }: HeaderProps) {
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
+              */}
+              <NavigationMenuItem>
+                <Link
+                  href="/productos"
+                  className="font-roboto font-medium px-4 py-2 hover:text-red-600 transition-colors"
+                >
+                  Productos
+                </Link>
+              </NavigationMenuItem>
 
               <NavigationMenuItem>
                 <Link
@@ -85,13 +95,13 @@ export function Header({ cartItems = 0 }: HeaderProps) {
                   Ofertas
                 </Link>
               </NavigationMenuItem>
-
+{/*
               <NavigationMenuItem>
                 <Link href="/blog" className="font-roboto font-medium px-4 py-2 hover:text-red-600 transition-colors">
                   Blog
                 </Link>
               </NavigationMenuItem>
-
+*/}
               <NavigationMenuItem>
                 <Link
                   href="/contacto"
@@ -127,11 +137,11 @@ export function Header({ cartItems = 0 }: HeaderProps) {
               <Heart className="h-5 w-5" />
             </Button>
 
-            {/* Account */}
+            {/* Account 
             <Button variant="ghost" size="icon" className="hidden sm:flex">
               <User className="h-5 w-5" />
             </Button>
-
+*/}
             {/* Cart */}
             <Link href="/carrito">
               <Button variant="ghost" size="icon" className="relative">
@@ -165,9 +175,11 @@ export function Header({ cartItems = 0 }: HeaderProps) {
                   >
                     Ofertas
                   </Link>
+                  {/*
                   <Link href="/blog" className="font-roboto font-medium text-lg hover:text-red-600 transition-colors">
                     Blog
                   </Link>
+                  */}
                   <Link
                     href="/contacto"
                     className="font-roboto font-medium text-lg hover:text-red-600 transition-colors"

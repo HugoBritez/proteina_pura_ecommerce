@@ -1,11 +1,17 @@
 import type { Metadata } from "next"
-import { Anton, Roboto } from 'next/font/google'
+import { Anton, Roboto, Oswald } from 'next/font/google'
 import "./globals.css"
 
 const anton = Anton({ 
   subsets: ["latin"],
   weight: ["400"],
   variable: "--font-anton"
+})
+
+const oswald = Oswald({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-oswald"
 })
 
 const roboto = Roboto({ 
@@ -28,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={`${anton.variable} ${roboto.variable} font-roboto`}>{children}</body>
+      <body className={`${anton.variable} ${oswald.variable} ${roboto.variable} font-roboto`}>{children}</body>
     </html>
   )
 }

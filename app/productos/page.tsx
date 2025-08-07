@@ -137,7 +137,7 @@ export default function ProductsPage() {
     <div className="space-y-6">
       {/* Search */}
       <div className="space-y-2">
-        <h3 className="font-anton text-lg font-bold">Buscar</h3>
+        <h3 className="font-oswald text-lg font-bold">Buscar</h3>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
@@ -151,7 +151,7 @@ export default function ProductsPage() {
 
       {/* Categories */}
       <div className="space-y-2">
-        <h3 className="font-anton text-lg font-bold">Categorías</h3>
+        <h3 className="font-oswald text-lg font-bold">Categorías</h3>
         <div className="space-y-2">
           <button
             onClick={() => setSelectedCategory(null)}
@@ -190,7 +190,7 @@ export default function ProductsPage() {
 
       {/* Sabores */}
       <div className="space-y-2">
-        <h3 className="font-anton text-lg font-bold">Sabores</h3>
+        <h3 className="font-oswald text-lg font-bold">Sabores</h3>
         <div className="space-y-2">
           {sabores.map((sabor) => (
             <div key={sabor.id} className="flex items-center space-x-2">
@@ -209,7 +209,7 @@ export default function ProductsPage() {
 
       {/* Filters */}
       <div className="space-y-2">
-        <h3 className="font-anton text-lg font-bold">Filtros</h3>
+        <h3 className="font-oswald text-lg font-bold">Filtros</h3>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -354,7 +354,7 @@ export default function ProductsPage() {
                     
                     <CardContent className="p-6 space-y-4">
                       <div className="space-y-2">
-                        <h3 className="font-anton text-xl font-bold text-gray-900">{producto.nombre}</h3>
+                        <h3 className="font-oswald text-xl font-bold text-gray-900">{producto.nombre}</h3>
                         <p className="text-gray-600 font-roboto text-sm">{producto.descripcion}</p>
                         <div className="flex justify-between text-sm text-gray-500">
                           <span>Categoría: {producto.categoria_info?.descripcion}</span>
@@ -366,7 +366,7 @@ export default function ProductsPage() {
                           </p>
                         )}
                       </div>
-                      
+                      {/*
                       <div className="flex items-center gap-2">
                         <div className="flex items-center">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -374,7 +374,7 @@ export default function ProductsPage() {
                         </div>
                         <span className="text-sm text-gray-500">(250+ reseñas)</span>
                       </div>
-                      
+                      */}
                       <div className="flex items-center gap-2">
                         <span className="font-anton text-2xl font-bold text-red-600">
                           ${producto.precio.toLocaleString()}

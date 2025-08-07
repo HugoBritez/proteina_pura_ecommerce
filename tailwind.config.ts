@@ -91,6 +91,7 @@ const config: Config = {
       },
       fontFamily: {
         anton: ['var(--font-anton)', 'sans-serif'],
+        oswald: ['var(--font-oswald)', 'sans-serif'],
         roboto: ['var(--font-roboto)', 'sans-serif'],
       },
     },
