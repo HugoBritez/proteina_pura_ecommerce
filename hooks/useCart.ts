@@ -1,29 +1,46 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { CartItem, ProductoConDetalles, Sabor } from '@/types/database'
+
+const CART_STORAGE_KEY = 'proteina-pura-cart'
 
 export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   // Cargar carrito desde localStorage al inicializar
   useEffect(() => {
-    const savedCart = localStorage.getItem('proteina-pura-cart')
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart))
-      } catch (error) {
-        console.error('Error loading cart from localStorage:', error)
+    try {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY)
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart)
+        // Validar que sea un array
+        if (Array.isArray(parsedCart)) {
+          setCart(parsedCart)
+        }
       }
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error)
+      // Limpiar localStorage corrupto
+      localStorage.removeItem(CART_STORAGE_KEY)
+    } finally {
+      setIsLoading(false)
     }
   }, [])
 
   // Guardar carrito en localStorage cuando cambie
   useEffect(() => {
-    localStorage.setItem('proteina-pura-cart', JSON.stringify(cart))
-  }, [cart])
+    if (!isLoading) {
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart))
+      } catch (error) {
+        console.error('Error saving cart to localStorage:', error)
+      }
+    }
+  }, [cart, isLoading])
 
-  const addToCart = (producto: ProductoConDetalles, sabor?: Sabor) => {
+  const addToCart = useCallback((producto: ProductoConDetalles, sabor?: Sabor) => {
     setCart(prevCart => {
       const existingItemIndex = prevCart.findIndex(
         item => item.producto.id === producto.id && 
@@ -44,18 +61,18 @@ export function useCart() {
         }]
       }
     })
-  }
+  }, [])
 
-  const removeFromCart = (productId: number, saborId?: number) => {
+  const removeFromCart = useCallback((productId: number, saborId?: number) => {
     setCart(prevCart => 
       prevCart.filter(item => 
         !(item.producto.id === productId && 
           item.sabor_seleccionado?.id === saborId)
       )
     )
-  }
+  }, [])
 
-  const updateQuantity = (productId: number, saborId: number | undefined, newQuantity: number) => {
+  const updateQuantity = useCallback((productId: number, saborId: number | undefined, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(productId, saborId)
       return
@@ -69,27 +86,34 @@ export function useCart() {
           : item
       )
     )
-  }
+  }, [removeFromCart])
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([])
-  }
+  }, [])
 
-  const getCartTotal = () => {
+  // Memoizar cálculos costosos
+  const cartTotal = useMemo(() => {
     return cart.reduce((total, item) => total + (item.producto.precio * item.quantity), 0)
-  }
+  }, [cart])
 
-  const getCartItemsCount = () => {
+  const cartItemsCount = useMemo(() => {
     return cart.reduce((total, item) => total + item.quantity, 0)
-  }
+  }, [cart])
+
+  const isCartEmpty = useMemo(() => {
+    return cart.length === 0
+  }, [cart])
 
   return {
     cart,
+    isLoading,
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
-    getCartTotal,
-    getCartItemsCount
+    getCartTotal: () => cartTotal,
+    getCartItemsCount: () => cartItemsCount,
+    isCartEmpty
   }
 }

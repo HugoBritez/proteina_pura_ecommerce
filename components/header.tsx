@@ -16,9 +16,11 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ShoppingCart, Search, Menu, User, Heart } from 'lucide-react'
 
+
 interface HeaderProps {
   cartItems?: number
 }
+
 
 export function Header({ cartItems = 0 }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -35,49 +37,6 @@ export function Header({ cartItems = 0 }: HeaderProps) {
           {/* Desktop Navigation */}
           <NavigationMenu className="hidden lg:flex">
             <NavigationMenuList>
-              {/*}
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="font-roboto font-medium">Productos</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 w-[400px]">
-                    <div className="grid gap-1">
-                      <h3 className="font-anton font-bold text-red-600">Proteínas</h3>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          href="/productos"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
-                        >
-                          <div className="text-sm font-medium leading-none">Todos los Productos</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Explora nuestra gama completa
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          href="/productos?categoria=whey"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
-                        >
-                          <div className="text-sm font-medium leading-none">Whey Protein</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Proteína de suero de absorción rápida
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          href="/productos?categoria=vegetal"
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-red-50"
-                        >
-                          <div className="text-sm font-medium leading-none">Proteína Vegetal</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">100% origen vegetal</p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </div>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              */}
               <NavigationMenuItem>
                 <Link
                   href="/productos"
@@ -95,13 +54,7 @@ export function Header({ cartItems = 0 }: HeaderProps) {
                   Ofertas
                 </Link>
               </NavigationMenuItem>
-{/*
-              <NavigationMenuItem>
-                <Link href="/blog" className="font-roboto font-medium px-4 py-2 hover:text-red-600 transition-colors">
-                  Blog
-                </Link>
-              </NavigationMenuItem>
-*/}
+
               <NavigationMenuItem>
                 <Link
                   href="/contacto"
@@ -137,11 +90,6 @@ export function Header({ cartItems = 0 }: HeaderProps) {
               <Heart className="h-5 w-5" />
             </Button>
 
-            {/* Account 
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
-              <User className="h-5 w-5" />
-            </Button>
-*/}
             {/* Cart */}
             <Link href="/carrito">
               <Button variant="ghost" size="icon" className="relative">
@@ -175,11 +123,9 @@ export function Header({ cartItems = 0 }: HeaderProps) {
                   >
                     Ofertas
                   </Link>
-                  {/*
                   <Link href="/blog" className="font-roboto font-medium text-lg hover:text-red-600 transition-colors">
                     Blog
                   </Link>
-                  */}
                   <Link
                     href="/contacto"
                     className="font-roboto font-medium text-lg hover:text-red-600 transition-colors"

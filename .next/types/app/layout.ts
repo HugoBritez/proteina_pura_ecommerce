@@ -1,4 +1,4 @@
-// File: C:\Users\profesor\Desktop\proteina-pura-ecommerce\proteina_pura_ecommerce\app\layout.tsx
+// File: /home/sebaskrieg/Desarrollo/personal/proteina-pura-ecommerce/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

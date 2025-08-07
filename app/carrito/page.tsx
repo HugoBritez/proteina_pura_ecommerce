@@ -11,6 +11,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useCart } from "@/hooks/useCart"
+import { formatCurrency } from "@/lib/utils/formatCurrency"
 
 export default function CarritoPage() {
   const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, getCartItemsCount } = useCart()
@@ -19,6 +20,8 @@ export default function CarritoPage() {
   const shipping = cart.length > 0 ? (getCartTotal() > 50000 ? 0 : 8000) : 0
   const subtotal = getCartTotal()
   const total = subtotal + shipping
+
+  console.log(cart)
 
   if (cart.length === 0) {
     return (
@@ -78,10 +81,10 @@ export default function CarritoPage() {
                   <div className="flex-1 space-y-2">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-anton text-lg font-bold text-gray-900">{item.producto.nombre}</h3>
-                        <p className="text-sm text-gray-600">{item.producto.categoria_info?.descripcion}</p>
+                          <h3 className="font-oswald text-lg font-bold text-gray-900">{item.producto.nombre}</h3>
+                        <p className="text-sm text-gray-600 font-oswald">{item.producto.categoria_info?.descripcion}</p>
                         {item.sabor_seleccionado && (
-                          <p className="text-sm text-gray-500">Sabor: {item.sabor_seleccionado.descripcion}</p>
+                          <p className="text-sm text-gray-500 font-oswald">Sabor: {item.sabor_seleccionado.descripcion}</p>
                         )}
                       </div>
                       <Button
@@ -116,11 +119,11 @@ export default function CarritoPage() {
                       </div>
                       
                       <div className="text-right">
-                        <p className="font-anton text-xl font-bold text-red-600">
-                          ${(item.producto.precio * item.quantity).toLocaleString()}
+                        <p className="font-oswald text-xl font-bold text-red-600">
+                          {formatCurrency((item.producto.precio * item.quantity))}
                         </p>
                         <p className="text-sm text-gray-500">
-                          ${item.producto.precio.toLocaleString()} c/u
+                          {formatCurrency(item.producto.precio)} c/u
                         </p>
                       </div>
                     </div>
@@ -153,13 +156,13 @@ export default function CarritoPage() {
               <CardContent className="p-0 space-y-4">
                 <div className="flex justify-between">
                   <span className="font-roboto">Subtotal</span>
-                  <span className="font-medium">${subtotal.toLocaleString()}</span>
+                  <span className="font-medium">{formatCurrency(subtotal)}</span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="font-roboto">Envío</span>
                   <span className="font-medium">
-                    {shipping === 0 ? 'Gratis' : `$${shipping.toLocaleString()}`}
+                    {shipping === 0 ? 'Gratis' : `${formatCurrency(shipping)}`}
                   </span>
                 </div>
                 
@@ -173,26 +176,14 @@ export default function CarritoPage() {
                 
                 <div className="flex justify-between text-lg font-bold">
                   <span className="font-anton">Total</span>
-                  <span className="font-anton text-red-600">${total.toLocaleString()}</span>
+                  <span className="font-anton text-red-600">{formatCurrency(total)}</span>
                 </div>
                 
                 <div className="space-y-3 pt-4">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Código de descuento"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                    />
-                    <Button variant="outline">Aplicar</Button>
-                  </div>
                   
                   <Button className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3">
                     Proceder al Checkout
                   </Button>
-                  
-                  <p className="text-xs text-gray-500 text-center">
-                    Envío gratis en pedidos superiores a $50.000
-                  </p>
                 </div>
               </CardContent>
             </Card>

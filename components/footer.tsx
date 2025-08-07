@@ -60,53 +60,21 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Support */}
-          <div className="space-y-4">
-            <h3 className="font-anton text-lg font-bold text-white">Soporte</h3>
-            <ul className="space-y-2 font-roboto">
-              <li>
-                <Link href="/ayuda" className="text-gray-300 hover:text-red-500 transition-colors">
-                  Centro de Ayuda
-                </Link>
-              </li>
-              <li>
-                <Link href="/envios" className="text-gray-300 hover:text-red-500 transition-colors">
-                  Envíos y Devoluciones
-                </Link>
-              </li>
-              <li>
-                <Link href="/garantia" className="text-gray-300 hover:text-red-500 transition-colors">
-                  Garantía
-                </Link>
-              </li>
-              <li>
-                <Link href="/contacto" className="text-gray-300 hover:text-red-500 transition-colors">
-                  Contacto
-                </Link>
-              </li>
-              <li>
-                <Link href="/asesoria" className="text-gray-300 hover:text-red-500 transition-colors">
-                  Asesoría Nutricional
-                </Link>
-              </li>
-            </ul>
-          </div>
-
           {/* Contact */}
           <div className="space-y-4">
             <h3 className="font-anton text-lg font-bold text-white">Contacto</h3>
             <div className="space-y-3 font-roboto">
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-red-500" />
-                <span className="text-gray-300">+57 300 123 4567</span>
+                <span className="text-gray-300">+595 981 234 567</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-red-500" />
-                <span className="text-gray-300">info@proteinapura.com</span>
+                <span className="text-gray-300">proteinapura@gmail.com</span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-4 w-4 text-red-500" />
-                <span className="text-gray-300">Bogotá, Colombia</span>
+                <span className="text-gray-300">Coronel Oviedo, Paraguay</span>
               </div>
             </div>
           </div>
@@ -114,7 +82,7 @@ export function Footer() {
 
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-400 font-roboto text-sm">© 2024 Proteína Pura. Todos los derechos reservados.</p>
+            <p className="text-gray-400 font-roboto text-sm">© {new Date().getFullYear()} Proteína Pura. Todos los derechos reservados.</p>
             <div className="flex space-x-6 text-sm font-roboto">
               <Link href="/privacidad" className="text-gray-400 hover:text-red-500 transition-colors">
                 Política de Privacidad

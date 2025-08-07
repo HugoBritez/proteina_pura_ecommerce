@@ -36,7 +36,6 @@ export async function getProductos(): Promise<ProductoConDetalles[]> {
       }
     })
   )
-
   return productosConSabores
 }
 

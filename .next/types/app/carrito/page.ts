@@ -1,4 +1,4 @@
-// File: C:\Users\profesor\Desktop\proteina-pura-ecommerce\proteina_pura_ecommerce\app\carrito\page.tsx
+// File: /home/sebaskrieg/Desarrollo/personal/proteina-pura-ecommerce/app/carrito/page.tsx
 import * as entry from '../../../../app/carrito/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
