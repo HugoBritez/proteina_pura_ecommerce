@@ -13,6 +13,7 @@ import { Footer } from "@/components/footer"
 import { getProductosDestacados } from "@/lib/products"
 import { useCart } from "@/hooks/useCart"
 import type { ProductoConDetalles } from "@/types/database"
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
 const benefits = [
   {
@@ -156,12 +157,12 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-20">
+      <section className="py-20 overflow-x-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
-            <h2 className="font-anton text-4xl lg:text-5xl font-bold text-gray-900">PRODUCTOS DESTACADOS</h2>
+            <h2 className="font-anton text-4xl lg:text-5xl font-bold text-gray-900">OFERTAS DESTACADAS</h2>
             <p className="text-xl text-gray-600 font-roboto max-w-2xl mx-auto">
-              Descubre nuestra selección premium de proteínas diseñadas para maximizar tus resultados
+              Aprovecha nuestras mejores ofertas en productos premium seleccionados
             </p>
           </div>
 
@@ -170,9 +171,9 @@ export default function HomePage() {
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="animate-pulse">
                   <CardHeader className="p-0">
-                    <div className="h-64 bg-gray-200 rounded-t-lg"></div>
+                    <div className="h-48 bg-gray-200 rounded-t-lg"></div>
                   </CardHeader>
-                  <CardContent className="p-6 space-y-4">
+                  <CardContent className="p-4 space-y-3">
                     <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                     <div className="h-3 bg-gray-200 rounded w-full"></div>
                     <div className="h-6 bg-gray-200 rounded w-1/2"></div>
@@ -181,80 +182,68 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProducts.map((producto) => (
-                <Card key={producto.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
-                  <CardHeader className="relative p-0">
-                    <div className="relative overflow-hidden rounded-t-lg">
-                      <Image
-                        src={producto.url_imagen || "/placeholder.svg?height=300&width=300&text=" + encodeURIComponent(producto.nombre)}
-                        alt={producto.nombre}
-                        width={300}
-                        height={300}
-                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <Badge className="absolute top-4 left-4 bg-red-600 text-white">
-                        {getBadgeText(producto)}
-                      </Badge>
-                      {producto.cantidad_stock === 0 && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <Badge variant="secondary" className="bg-gray-800 text-white">
-                            Agotado
+            <Carousel className="w-full">
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {featuredProducts.map((producto) => (
+                  <CarouselItem key={producto.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                    <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
+                      <CardHeader className="relative p-0">
+                        <div className="relative overflow-hidden rounded-t-lg">
+                          <Image
+                            src={producto.url_imagen || "/placeholder.svg?height=200&width=200&text=" + encodeURIComponent(producto.nombre)}
+                            alt={producto.nombre}
+                            width={200}
+                            height={200}
+                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">
+                            {getBadgeText(producto)}
                           </Badge>
+                          {producto.cantidad_stock === 0 && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                              <Badge variant="secondary" className="bg-gray-800 text-white">
+                                Agotado
+                              </Badge>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </CardHeader>
+                      </CardHeader>
 
-                  <CardContent className="p-6 space-y-4">
-                    <div className="space-y-2">
-                      <h3 className="font-anton text-xl font-bold text-gray-900">{producto.nombre}</h3>
-                      <p className="text-gray-600 font-roboto text-sm">{producto.descripcion}</p>
-                      <p className="text-sm text-gray-500">Categoría: {producto.categoria_info?.descripcion}</p>
-                      {producto.sabores_info && producto.sabores_info.length > 0 && (
-                        <p className="text-sm text-gray-500">
-                          Sabores: {producto.sabores_info.map(s => s.descripcion).join(', ')}
-                        </p>
-                      )}
-                    </div>
+                      <CardContent className="p-4 space-y-3">
+                        <div className="space-y-1">
+                          <h3 className="font-anton text-lg font-bold text-gray-900">{producto.nombre}</h3>
+                          <p className="text-gray-600 font-roboto text-sm line-clamp-2">{producto.descripcion}</p>
+                        </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="ml-1 text-sm font-medium">4.8</span>
-                      </div>
-                      <span className="text-sm text-gray-500">(250+ reseñas)</span>
-                    </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-anton text-xl font-bold text-red-600">
+                            ${producto.precio.toLocaleString()}
+                          </span>
+                          {producto.isOferta && (
+                            <span className="text-sm text-gray-400 line-through">
+                              ${calculateDiscount(producto.precio).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
 
-                    <div className="flex items-center gap-2">
-                      <span className="font-anton text-2xl font-bold text-red-600">
-                        ${producto.precio.toLocaleString()}
-                      </span>
-                      {producto.isOferta && (
-                        <span className="text-lg text-gray-400 line-through">
-                          ${calculateDiscount(producto.precio).toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="text-sm text-gray-500">
-                      Stock: {producto.cantidad_stock} unidades
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="p-6 pt-0">
-                    <Button
-                      onClick={() => addToCart(producto, producto.sabores_info?.[0])}
-                      disabled={producto.cantidad_stock === 0}
-                      className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      {producto.cantidad_stock > 0 ? "Agregar al Carrito" : "Agotado"}
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                      <CardFooter className="p-4 pt-0">
+                        <Button
+                          onClick={() => addToCart(producto, producto.sabores_info?.[0])}
+                          disabled={producto.cantidad_stock === 0}
+                          className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Plus className="mr-2 h-3 w-3" />
+                          {producto.cantidad_stock > 0 ? "Agregar al Carrito" : "Agotado"}
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:flex -left-4" />
+              <CarouselNext className="hidden md:flex -right-4" />
+            </Carousel>
           )}
 
           <div className="text-center mt-12">
