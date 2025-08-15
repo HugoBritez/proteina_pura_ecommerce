@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent, CardFooter } from "./ui/card";
 import { Button } from "./ui/button";
 import { Plus } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
 
 interface ProductCardProps
@@ -16,6 +17,12 @@ interface ProductCardProps
 }
 
 export function ProductCard({ producto, addToCart, getBadgeText, calculateDiscount }: ProductCardProps) {
+  const [saborSeleccionado, setSaborSeleccionado] = useState<Sabor | null>(
+    producto.sabores_info && producto.sabores_info.length > 0 
+      ? producto.sabores_info[0] 
+      : null
+  );
+
   return (
     <Card key={producto.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
                     <CardHeader className="relative p-0">
@@ -49,16 +56,45 @@ export function ProductCard({ producto, addToCart, getBadgeText, calculateDiscou
                         <div className="flex justify-between text-sm text-gray-500">
                           <span>Categoría: {producto.categoria_info?.descripcion}</span>
                         </div>
-                        {producto.sabores_info && producto.sabores_info.length > 0 && (
-                          <p className="text-sm text-gray-500">
-                            Sabores: {producto.sabores_info.map(s => s.descripcion).join(', ')}
-                          </p>
+                        {producto.sabores_info && producto.sabores_info.length > 0 ? (
+                          // Producto CON sabores
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium text-gray-700">Sabores disponibles:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {producto.sabores_info.map((sabor) => (
+                                <button
+                                  key={sabor.id}
+                                  onClick={() => setSaborSeleccionado(sabor)}
+                                  className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                                    saborSeleccionado?.id === sabor.id
+                                      ? 'bg-red-600 text-white border-red-600 shadow-md'
+                                      : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-600 hover:shadow-sm'
+                                  }`}
+                                >
+                                  {sabor.descripcion}
+                                </button>
+                              ))}
+                            </div>
+                            {!saborSeleccionado && (
+                              <p className="text-xs text-amber-600">⚠️ Selecciona un sabor para continuar</p>
+                            )}
+                          </div>
+                        ) : (
+                          // Producto SIN sabores
+                          <div className="text-sm text-gray-500">
+                            <span className="text-green-600">✓</span> Producto sin variantes
+                          </div>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-anton text-2xl font-semi text-red-600">
                           {formatCurrency(producto.precio)}
                         </span>
+                        {saborSeleccionado && (
+                          <Badge variant="outline" className="text-xs">
+                            {saborSeleccionado.descripcion}
+                          </Badge>
+                        )}
                         {producto.isOferta && (
                           <span className="text-lg text-gray-400 line-through">
                             {formatCurrency(calculateDiscount(producto.precio))}
@@ -69,12 +105,19 @@ export function ProductCard({ producto, addToCart, getBadgeText, calculateDiscou
                     
                     <CardFooter className="p-6 pt-0">
                       <Button 
-                        onClick={() => addToCart(producto, producto.sabores_info?.[0])}
-                        disabled={producto.cantidad_stock === 0}
+                        onClick={() => addToCart(producto, saborSeleccionado ||  undefined)}
+                        disabled={producto.cantidad_stock === 0 || (producto.sabores_info && producto.sabores_info.length > 0 && !saborSeleccionado)}
                         className="w-full bg-gradient-to-r disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-300 from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium"
                       >
                         <Plus className="mr-2 h-4 w-4" />
-                        {producto.cantidad_stock > 0 ? "Agregar al Carrito" : "Agotado"}
+                        {producto.cantidad_stock === 0 
+                          ? "Agotado"
+                          : producto.sabores_info && producto.sabores_info.length > 0
+                            ? !saborSeleccionado 
+                              ? "Selecciona un sabor" 
+                              : `Agregar ${saborSeleccionado.descripcion}`
+                            : "Agregar al Carrito"
+                        }
                       </Button>
                     </CardFooter>
                   </Card>

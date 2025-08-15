@@ -78,6 +78,62 @@ export async function getProductosPorCategoria(categoriaId: number): Promise<Pro
   return productosConSabores
 }
 
+export async function getProductosPorCategoriaSlug(categoriaSlug: string): Promise<{
+  productos: ProductoConDetalles[]
+  categoria: Categoria | null
+}> {
+  // Primero obtener la categoría por descripción
+  const { data: categoria, error: errorCategoria } = await supabase
+    .from('categorias')
+    .select('*')
+    .eq('isActivo', true)
+    .ilike('descripcion', `%${categoriaSlug}%`)
+    .single()
+
+  if (errorCategoria || !categoria) {
+    console.error('Error fetching categoria:', errorCategoria)
+    return { productos: [], categoria: null }
+  }
+
+  // Luego obtener los productos de esa categoría
+  const { data: productos, error: errorProductos } = await supabase
+    .from('productos')
+    .select(`
+      *,
+      categoria_info:categorias(*)
+    `)
+    .eq('categoria', categoria.id)
+    .eq('isActivo', true)
+    .order('created_at', { ascending: false })
+
+  if (errorProductos) {
+    console.error('Error fetching productos por categoria:', errorProductos)
+    return { productos: [], categoria }
+  }
+
+  const productosConSabores = await Promise.all(
+    productos.map(async (producto) => {
+      if (producto.sabores && producto.sabores.length > 0) {
+        const { data: sabores } = await supabase
+          .from('sabores')
+          .select('*')
+          .in('id', producto.sabores)
+
+        return {
+          ...producto,
+          sabores_info: sabores || []
+        }
+      }
+      return {
+        ...producto,
+        sabores_info: []
+      }
+    })
+  )
+
+  return { productos: productosConSabores, categoria }
+}
+
 export async function getProductosDestacados(): Promise<ProductoConDetalles[]> {
   const { data: productos, error } = await supabase
     .from('productos')
