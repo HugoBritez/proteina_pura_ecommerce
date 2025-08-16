@@ -36,6 +36,7 @@ export type Database = {
           categoria: number
           created_at: string
           descripcion: string | null
+          galeria_urls: string[] | null
           id: number
           isActivo: boolean
           isOferta: boolean
@@ -49,6 +50,7 @@ export type Database = {
           categoria?: number
           created_at?: string
           descripcion?: string | null
+          galeria_urls?: string[] | null
           id?: number
           isActivo?: boolean
           isOferta?: boolean
@@ -62,6 +64,7 @@ export type Database = {
           categoria?: number
           created_at?: string
           descripcion?: string | null
+          galeria_urls?: string[] | null
           id?: number
           isActivo?: boolean
           isOferta?: boolean

@@ -28,7 +28,8 @@ export function ProductCard({ producto, addToCart, getBadgeText, calculateDiscou
                     <CardHeader className="relative p-0">
                       <div className="relative overflow-hidden rounded-t-lg">
                         <Image
-                          src={producto.url_imagen || "/placeholder.svg?height=300&width=300&text=" + encodeURIComponent(producto.nombre)}
+                          src={(producto.galeria_urls && producto.galeria_urls.length > 0 ? producto.galeria_urls[0] : producto.url_imagen) || 
+                               "/placeholder.svg?height=300&width=300&text=" + encodeURIComponent(producto.nombre)}
                           alt={producto.nombre}
                           width={300}
                           height={300}

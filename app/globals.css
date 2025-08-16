@@ -86,3 +86,13 @@
   outline: 2px solid #e30714;
   outline-offset: 2px;
 }
+
+/* Keyframes for marquee slide (loop highlights) */
+@keyframes slide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

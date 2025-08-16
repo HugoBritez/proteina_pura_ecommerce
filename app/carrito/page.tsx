@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -12,16 +12,80 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { useCart } from "@/hooks/useCart"
 import { formatCurrency } from "@/lib/utils/formatCurrency"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { empresa } from "@/lib/consts/empresa.data"
 
 export default function CarritoPage() {
   const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, getCartItemsCount } = useCart()
   const [promoCode, setPromoCode] = useState("")
+  const [fullName, setFullName] = useState("")
+  const [ciRuc, setCiRuc] = useState("")
+  const [address, setAddress] = useState("")
 
   const shipping = cart.length > 0 ? (getCartTotal() > 50000 ? 0 : 8000) : 0
   const subtotal = getCartTotal()
   const total = subtotal + shipping
 
   console.log(cart)
+
+  // Persistencia en localStorage de los datos del checkout
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('pp_checkout')
+      if (raw) {
+        const data = JSON.parse(raw) as { fullName?: string; ciRuc?: string; address?: string }
+        setFullName(data.fullName || "")
+        setCiRuc(data.ciRuc || "")
+        setAddress(data.address || "")
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try {
+      const payload = JSON.stringify({ fullName, ciRuc, address })
+      localStorage.setItem('pp_checkout', payload)
+    } catch {}
+  }, [fullName, ciRuc, address])
+
+  function sanitizePhoneNumber(input: string) {
+    return (input || "").replace(/[^\d]/g, "")
+  }
+
+  function buildWhatsappMessage() {
+    const lines: string[] = []
+    lines.push(`Nuevo pedido desde la web`) 
+    lines.push(`Nombre: ${fullName}`)
+    lines.push(`CI/RUC: ${ciRuc}`)
+    lines.push(`Dirección: ${address}`)
+    lines.push("")
+    lines.push(`Items:`)
+    cart.forEach((item, idx) => {
+      const sabor = item.sabor_seleccionado ? ` | Sabor: ${item.sabor_seleccionado.descripcion}` : ""
+      lines.push(`${idx + 1}. ${item.producto.nombre}${sabor} | Cant: ${item.quantity} | ${formatCurrency(item.producto.precio * item.quantity)}`)
+    })
+    lines.push("")
+    lines.push(`Subtotal: ${formatCurrency(subtotal)}`)
+    lines.push(`Envío: ${shipping === 0 ? 'Gratis' : formatCurrency(shipping)}`)
+    lines.push(`Total: ${formatCurrency(total)}`)
+    return lines.join("\n")
+  }
+
+  function handleCheckoutWhatsapp() {
+    if (!fullName.trim() || !ciRuc.trim() || !address.trim()) {
+      alert("Por favor completa nombre, CI/RUC y dirección para continuar.")
+      return
+    }
+    if (cart.length === 0) {
+      alert("Tu carrito está vacío.")
+      return
+    }
+    const phone = sanitizePhoneNumber(empresa.telefono)
+    const text = encodeURIComponent(buildWhatsappMessage())
+    const url = `https://wa.me/${phone}?text=${text}`
+    window.open(url, "_blank")
+  }
 
   if (cart.length === 0) {
     return (
@@ -154,6 +218,21 @@ export default function CarritoPage() {
               </CardHeader>
               
               <CardContent className="p-0 space-y-4">
+                <div className="space-y-3">
+                  <div>
+                    <Label>Nombre completo</Label>
+                    <Input placeholder="Tu nombre y apellido" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>CI o RUC</Label>
+                    <Input placeholder="Documento o RUC" value={ciRuc} onChange={(e) => setCiRuc(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label>Dirección</Label>
+                    <Textarea placeholder="Calle, número, barrio/ciudad, referencias" value={address} onChange={(e) => setAddress(e.target.value)} />
+                  </div>
+                </div>
+
                 <div className="flex justify-between">
                   <span className="font-roboto">Subtotal</span>
                   <span className="font-medium">{formatCurrency(subtotal)}</span>
@@ -180,9 +259,8 @@ export default function CarritoPage() {
                 </div>
                 
                 <div className="space-y-3 pt-4">
-                  
-                  <Button className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3">
-                    Proceder al Checkout
+                  <Button onClick={handleCheckoutWhatsapp} className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3">
+                    Enviar pedido por WhatsApp
                   </Button>
                 </div>
               </CardContent>

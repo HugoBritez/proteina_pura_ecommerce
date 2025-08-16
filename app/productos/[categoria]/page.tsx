@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { notFound } from 'next/navigation'
+import { notFound, useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -14,18 +14,13 @@ import { getProductosPorCategoriaSlug } from '@/lib/products'
 import { useCart } from '@/hooks/useCart'
 import type { ProductoConDetalles, Categoria } from '@/types/database'
 
-interface CategoriaPageProps {
-    params: {
-        categoria: string
-    }
-}
-
-export default function CategoriaPage({ params }: CategoriaPageProps) {
+export default function CategoriaPage() {
     const [productos, setProductos] = useState<ProductoConDetalles[]>([])
     const [categoria, setCategoria] = useState<Categoria | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const { addToCart, getCartItemsCount } = useCart()
+    const params = useParams<{ categoria: string }>()
 
     useEffect(() => {
         async function loadProductos() {

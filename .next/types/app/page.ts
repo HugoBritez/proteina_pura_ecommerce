@@ -1,4 +1,4 @@
-// File: /home/sebaskrieg/Desarrollo/personal/proteina-pura-ecommerce/app/page.tsx
+// File: /home/sebasdev/repositories/proteina_pura_ecommerce/app/page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

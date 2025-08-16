@@ -19,6 +19,9 @@ type CarouselProps = {
   plugins?: CarouselPlugin
   orientation?: "horizontal" | "vertical"
   setApi?: (api: CarouselApi) => void
+  autoplay?: boolean
+  autoplayInterval?: number
+  pauseOnHover?: boolean
 }
 
 type CarouselContextProps = {
@@ -28,6 +31,9 @@ type CarouselContextProps = {
   scrollNext: () => void
   canScrollPrev: boolean
   canScrollNext: boolean
+  selectedIndex: number
+  scrollSnapCount: number
+  scrollTo: (index: number) => void
 } & CarouselProps
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null)
@@ -54,6 +60,9 @@ const Carousel = React.forwardRef<
       plugins,
       className,
       children,
+      autoplay = false,
+      autoplayInterval = 5000,
+      pauseOnHover = true,
       ...props
     },
     ref
@@ -67,6 +76,9 @@ const Carousel = React.forwardRef<
     )
     const [canScrollPrev, setCanScrollPrev] = React.useState(false)
     const [canScrollNext, setCanScrollNext] = React.useState(false)
+    const [selectedIndex, setSelectedIndex] = React.useState(0)
+    const [scrollSnapCount, setScrollSnapCount] = React.useState(0)
+    const [isHovered, setIsHovered] = React.useState(false)
 
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
@@ -75,6 +87,8 @@ const Carousel = React.forwardRef<
 
       setCanScrollPrev(api.canScrollPrev())
       setCanScrollNext(api.canScrollNext())
+      setSelectedIndex(api.selectedScrollSnap())
+      setScrollSnapCount(api.scrollSnapList().length)
     }, [])
 
     const scrollPrev = React.useCallback(() => {
@@ -97,6 +111,41 @@ const Carousel = React.forwardRef<
       },
       [scrollPrev, scrollNext]
     )
+
+    const scrollTo = React.useCallback(
+      (index: number) => {
+        api?.scrollTo(index)
+      },
+      [api]
+    )
+
+    // Autoplay simple sin plugin
+    React.useEffect(() => {
+      if (!api || !autoplay) return
+      let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+      const tick = () => {
+        timeoutId = setTimeout(() => {
+          if (!api) return
+          if (pauseOnHover && isHovered) {
+            tick()
+            return
+          }
+          if (api.canScrollNext()) {
+            api.scrollNext()
+          } else {
+            api.scrollTo(0)
+          }
+          tick()
+        }, autoplayInterval)
+      }
+
+      tick()
+
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId)
+      }
+    }, [api, autoplay, autoplayInterval, pauseOnHover, isHovered])
 
     React.useEffect(() => {
       if (!api || !setApi) {
@@ -132,11 +181,19 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          selectedIndex,
+          scrollSnapCount,
+          scrollTo,
+          autoplay,
+          autoplayInterval,
+          pauseOnHover,
         }}
       >
         <div
           ref={ref}
           onKeyDownCapture={handleKeyDown}
+          onMouseEnter={pauseOnHover ? () => setIsHovered(true) : undefined}
+          onMouseLeave={pauseOnHover ? () => setIsHovered(false) : undefined}
           className={cn("relative", className)}
           role="region"
           aria-roledescription="carousel"
@@ -260,3 +317,30 @@ export {
   CarouselPrevious,
   CarouselNext,
 }
+
+const CarouselIndicators = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => {
+  const { selectedIndex, scrollSnapCount, scrollTo } = useCarousel()
+  return (
+    <div ref={ref} className={cn("flex items-center justify-center gap-2", className)} {...props}>
+      {Array.from({ length: scrollSnapCount }).map((_, i) => (
+        <button
+          key={i}
+          type="button"
+          aria-label={`Ir al slide ${i + 1}`}
+          aria-current={selectedIndex === i}
+          onClick={() => scrollTo(i)}
+          className={cn(
+            "h-2 w-2 rounded-full transition-colors",
+            selectedIndex === i ? "bg-gray-900" : "bg-gray-300 hover:bg-gray-400"
+          )}
+        />
+      ))}
+    </div>
+  )
+})
+CarouselIndicators.displayName = "CarouselIndicators"
+
+export { CarouselIndicators }
