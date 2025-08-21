@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,6 +54,37 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <h1 className="text-xl font-semibold">Iniciar sesión</h1>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input type="email" disabled />
+              </div>
+              <div className="space-y-2">
+                <Label>Contraseña</Label>
+                <Input type="password" disabled />
+              </div>
+              <Button disabled className="w-full">
+                Cargando...
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
 
