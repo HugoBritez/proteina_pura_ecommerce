@@ -245,7 +245,7 @@ export default function CarritoPage() {
                   </span>
                 </div>
                 
-                {shipping === 0 && subtotal > 0 && (
+                {shipping === 0 && subtotal > 0 && ( // TODO: Cambiar a por cantidad de productos
                   <p className="text-sm text-green-600">
                     ¡Felicidades! Tu pedido califica para envío gratis
                   </p>

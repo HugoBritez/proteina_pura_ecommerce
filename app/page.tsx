@@ -243,90 +243,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories Grid (Bento) just below Hero */}
-      <section className="py-14">
-        <div className="container mx-auto px-4">
-          <div className="text-center space-y-4 mb-8">
-            <h2 className="font-anton text-3xl lg:text-5xl font-bold text-gray-900">EXPLORA POR CATEGORÍAS</h2>
-            <p className="text-base lg:text-lg text-gray-600 font-roboto">Encuentra más rápido lo que necesitas</p>
-          </div>
-
-          {categoriasLoading ? (
-            <div className="grid grid-cols-6 md:grid-cols-12 auto-rows-[90px] md:auto-rows-[140px] [grid-auto-flow:dense] gap-2.5 md:gap-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className={`rounded-xl overflow-hidden animate-pulse ${getBentoClasses(i)}`}>
-                  <div className="h-full w-full bg-gray-200" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-6 md:grid-cols-12 auto-rows-[90px] md:auto-rows-[140px] [grid-auto-flow:dense] gap-2.5 md:gap-4">
-              {categorias.map((cat, idx) => (
-                <Link
-                  key={cat.id}
-                  href={`/productos/${encodeURIComponent(cat.descripcion)}`}
-                  className={`block ${getBentoClasses(idx)}`}
-                  aria-label={`Ver productos de ${cat.descripcion}`}
-                >
-                  <div className="relative h-full w-full rounded-xl overflow-hidden">
-                    <Image
-                      src={`/placeholder.svg?height=320&width=640&text=${encodeURIComponent(cat.descripcion)}`}
-                      alt={cat.descripcion}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 bg-black/35 text-white px-3 py-2">
-                      <span className="font-anton text-sm sm:text-base">{cat.descripcion}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Benefits Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {benefits.map((benefit, index) => (
-              <div key={index} className="text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
-                  <benefit.icon className="h-8 w-8 text-red-600" />
-                </div>
-                <h3 className="font-anton text-xl font-bold text-gray-900">{benefit.title}</h3>
-                <p className="text-gray-600 font-roboto">{benefit.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Loop Highlights Section */}
-      <section className="py-14">
-        <div className="container mx-auto px-4">
-          <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-50/60 via-transparent to-red-50/60" />
-            <div className="[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
-              <div className="flex gap-10 animate-[slide_25s_linear_infinite] px-6 py-6">
-                {highlights.concat(highlights).concat(highlights).map((h, i) => (
-                  <div key={i} className="flex items-center gap-3 whitespace-nowrap">
-                    <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
-                      <h.icon className="h-4 w-4 text-red-600" />
-                    </div>
-                    <span className="font-roboto text-gray-800 text-sm sm:text-base">{h.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       
-
       {/* Featured Products */}
       <section className="py-20 overflow-x-hidden">
         <div className="container mx-auto px-4">
@@ -432,6 +349,91 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Categories Grid (Bento) just below Hero */}
+      <section className="py-14">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-4 mb-8">
+            <h2 className="font-anton text-3xl lg:text-5xl font-bold text-gray-900">EXPLORA POR CATEGORÍAS</h2>
+            <p className="text-base lg:text-lg text-gray-600 font-roboto">Encuentra más rápido lo que necesitas</p>
+          </div>
+
+          {categoriasLoading ? (
+            <div className="grid grid-cols-6 md:grid-cols-12 auto-rows-[90px] md:auto-rows-[140px] [grid-auto-flow:dense] gap-2.5 md:gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className={`rounded-xl overflow-hidden animate-pulse ${getBentoClasses(i)}`}>
+                  <div className="h-full w-full bg-gray-200" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-6 md:grid-cols-12 auto-rows-[90px] md:auto-rows-[140px] [grid-auto-flow:dense] gap-2.5 md:gap-4">
+              {categorias.map((cat, idx) => (
+                <Link
+                  key={cat.id}
+                  href={`/productos/${encodeURIComponent(cat.descripcion)}`}
+                  className={`block ${getBentoClasses(idx)}`}
+                  aria-label={`Ver productos de ${cat.descripcion}`}
+                >
+                  <div className="relative h-full w-full rounded-xl overflow-hidden">
+                    <Image
+                      src={`/placeholder.svg?height=320&width=640&text=${encodeURIComponent(cat.descripcion)}`}
+                      alt={cat.descripcion}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 bg-black/35 text-white px-3 py-2">
+                      <span className="font-anton text-sm sm:text-base">{cat.descripcion}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {benefits.map((benefit, index) => (
+              <div key={index} className="text-center space-y-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
+                  <benefit.icon className="h-8 w-8 text-red-600" />
+                </div>
+                <h3 className="font-anton text-xl font-bold text-gray-900">{benefit.title}</h3>
+                <p className="text-gray-600 font-roboto">{benefit.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Loop Highlights Section */}
+      <section className="py-14">
+        <div className="container mx-auto px-4">
+          <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-50/60 via-transparent to-red-50/60" />
+            <div className="[mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+              <div className="flex gap-10 animate-[slide_25s_linear_infinite] px-6 py-6">
+                {highlights.concat(highlights).concat(highlights).map((h, i) => (
+                  <div key={i} className="flex items-center gap-3 whitespace-nowrap">
+                    <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-100">
+                      <h.icon className="h-4 w-4 text-red-600" />
+                    </div>
+                    <span className="font-roboto text-gray-800 text-sm sm:text-base">{h.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
+
 
       {/* Testimonials Section */}
       <section className="py-20 bg-gray-50">
