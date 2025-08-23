@@ -11,6 +11,7 @@ import { Star, Plus, ArrowLeft, Filter } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { getProductosPorCategoriaSlug } from '@/lib/products'
+import { formatCurrency } from '@/lib/utils/formatCurrency'
 import { useCart } from '@/hooks/useCart'
 import type { ProductoConDetalles, Categoria } from '@/types/database'
 
@@ -213,15 +214,15 @@ export default function CategoriaPage() {
                                                 {producto.isOferta ? (
                                                     <>
                                                         <span className="text-lg font-bold text-red-600">
-                                                            ${producto.precio.toLocaleString()}
+                                                            {formatCurrency(producto.precio)}
                                                         </span>
                                                         <span className="text-sm text-gray-500 line-through">
-                                                            ${calculateDiscount(producto.precio).toLocaleString()}
+                                                            {formatCurrency(calculateDiscount(producto.precio))}
                                                         </span>
                                                     </>
                                                 ) : (
                                                     <span className="text-lg font-bold text-gray-900">
-                                                        ${producto.precio.toLocaleString()}
+                                                        {formatCurrency(producto.precio)}
                                                     </span>
                                                 )}
                                             </div>

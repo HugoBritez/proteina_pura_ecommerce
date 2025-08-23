@@ -11,6 +11,7 @@ import { Star, Truck, Shield, Award, Users, ArrowRight, Plus } from 'lucide-reac
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getProductosDestacados, getCategorias } from "@/lib/products"
+import { formatCurrency } from "@/lib/utils/formatCurrency"
 import { useCart } from "@/hooks/useCart"
 import type { ProductoConDetalles, Categoria } from "@/types/database"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, CarouselIndicators } from "@/components/ui/carousel"
@@ -77,7 +78,7 @@ const faqs = [
   },
   {
     q: "¿Hacen envíos a todo el país?",
-    a: "Sí. Envío gratis en pedidos superiores a $50.000 y tiempos de entrega de 24‑72h según ciudad.",
+    a: "Sí. Envío gratis en pedidos superiores a Gs 50.000 y tiempos de entrega de 24‑72h según ciudad.",
   },
   {
     q: "¿Cómo elegir entre Whey, Caseína o Vegetal?",
@@ -337,11 +338,11 @@ export default function HomePage() {
 
                         <div className="flex items-center gap-2">
                           <span className="font-anton text-xl font-bold text-red-600">
-                            ${producto.precio.toLocaleString()}
+                            {formatCurrency(producto.precio)}
                           </span>
                           {producto.isOferta && (
                             <span className="text-sm text-gray-400 line-through">
-                              ${calculateDiscount(producto.precio).toLocaleString()}
+                              {formatCurrency(calculateDiscount(producto.precio))}
                             </span>
                           )}
                         </div>
