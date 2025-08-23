@@ -179,14 +179,42 @@ export async function getCategorias(): Promise<Categoria[]> {
     .from('categorias')
     .select('*')
     .eq('isActivo', true)
-    .order('descripcion')
 
   if (error) {
     console.error('Error fetching categorias:', error)
     return []
   }
 
-  return categorias
+  // Orden de importancia personalizado
+  const ordenImportancia = [
+    'Proteínas',
+    'Creatinas', 
+    'Combos Promocionales',
+    'Quemadores de Grasa',
+    'Preentrenos',
+    'Aminoácidos',
+    'Salud y Vitalidad'
+  ]
+
+  // Ordenar categorías según el orden de importancia
+  const categoriasOrdenadas = categorias.sort((a, b) => {
+    const indexA = ordenImportancia.findIndex(cat => 
+      a.descripcion.toLowerCase().includes(cat.toLowerCase()) ||
+      cat.toLowerCase().includes(a.descripcion.toLowerCase())
+    )
+    const indexB = ordenImportancia.findIndex(cat => 
+      b.descripcion.toLowerCase().includes(cat.toLowerCase()) ||
+      cat.toLowerCase().includes(b.descripcion.toLowerCase())
+    )
+    
+    // Si no se encuentra en el orden, va al final
+    const posA = indexA === -1 ? 999 : indexA
+    const posB = indexB === -1 ? 999 : indexB
+    
+    return posA - posB
+  })
+
+  return categoriasOrdenadas
 }
 
 export async function getSabores(): Promise<Sabor[]> {

@@ -87,7 +87,7 @@ const faqs = [
     q: "¿Puedo devolver un producto?",
     a: "Aceptamos cambios y devoluciones dentro de 7 días si el producto está cerrado y en perfecto estado.",
   },
-]
+] 
 
 export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<ProductoConDetalles[]>([])
@@ -137,6 +137,36 @@ export default function HomePage() {
     return Math.round(precio * 1.25)
   }
 
+  // Orden de importancia para las categorías
+  const ordenImportancia = [
+    'Proteínas',
+    'Creatinas', 
+    'Combos Promocionales',
+    'Quemadores de Grasa',
+    'Preentrenos',
+    'Aminoácidos',
+    'Salud y Vitalidad'
+  ]
+
+  const categoriasOrdenadas = useMemo(() => {
+    return categorias.sort((a, b) => {
+      const indexA = ordenImportancia.findIndex(cat => 
+        a.descripcion.toLowerCase().includes(cat.toLowerCase()) ||
+        cat.toLowerCase().includes(a.descripcion.toLowerCase())
+      )
+      const indexB = ordenImportancia.findIndex(cat => 
+        b.descripcion.toLowerCase().includes(cat.toLowerCase()) ||
+        cat.toLowerCase().includes(b.descripcion.toLowerCase())
+      )
+      
+      // Si no se encuentra en el orden, va al final
+      const posA = indexA === -1 ? 999 : indexA
+      const posB = indexB === -1 ? 999 : indexB
+      
+      return posA - posB
+    })
+  }, [categorias])
+
   const defaultPattern = [
     "col-span-6 row-span-2 md:col-span-6 md:row-span-2",
     "col-span-3 row-span-1 md:col-span-6 md:row-span-1",
@@ -149,7 +179,7 @@ export default function HomePage() {
   ]
 
   const bentoPattern = useMemo(() => {
-    if (categorias.length === 7) {
+    if (categoriasOrdenadas.length === 7) {
       return [
         "col-span-6 row-span-2 md:col-span-8 md:row-span-2",
         "col-span-3 row-span-1 md:col-span-4 md:row-span-1",
@@ -161,7 +191,7 @@ export default function HomePage() {
       ]
     }
     return defaultPattern
-  }, [categorias.length])
+  }, [categoriasOrdenadas.length])
 
   const getBentoClasses = (index: number) => {
     return `${bentoPattern[index % bentoPattern.length]}`
@@ -174,17 +204,19 @@ export default function HomePage() {
       <Header cartItems={getCartItemsCount()} />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-white to-gray-50 py-20 lg:py-32">
-        <div className="container mx-auto px-4">
+      <section className="relative py-20 lg:py-32 bg-cover bg-center bg-no-repeat bg-[url('/ppmobile.jpg')] md:bg-[url('/ppdesktop.jpg')]">
+        {/* Overlay para mejorar legibilidad del texto */}
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-4">
-                <Badge className="bg-red-50 text-red-600 border-red-200 font-medium">🏆 #1 en Proteínas Premium</Badge>
-                <h1 className="font-anton text-5xl lg:text-7xl font-bold text-gray-900 leading-tight">
+                <Badge className="bg-red-600/90 text-white border-red-500 font-medium backdrop-blur-sm">🏆 #1 en Proteínas Premium</Badge>
+                <h1 className="font-anton text-5xl lg:text-7xl font-bold text-white leading-tight drop-shadow-lg">
                   PROTEÍNA
                   <span className="text-red-600 block">PURA</span>
                 </h1>
-                <p className="text-xl text-gray-600 font-roboto max-w-lg">
+                <p className="text-xl text-gray-100 font-roboto max-w-lg drop-shadow-md">
                   Maximiza tu rendimiento con las proteínas de más alta calidad. Resultados garantizados para atletas
                   serios.
                 </p>
@@ -213,20 +245,20 @@ export default function HomePage() {
 
               <div className="flex items-center gap-8 pt-4">
                 <div className="text-center">
-                  <div className="font-anton text-2xl font-bold text-gray-900">50K+</div>
-                  <div className="text-sm text-gray-600">Clientes Satisfechos</div>
+                  <div className="font-anton text-2xl font-bold text-white drop-shadow-lg">50K+</div>
+                  <div className="text-sm text-gray-200 drop-shadow-md">Clientes Satisfechos</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-anton text-2xl font-bold text-gray-900">4.9★</div>
-                  <div className="text-sm text-gray-600">Calificación Promedio</div>
+                  <div className="font-anton text-2xl font-bold text-white drop-shadow-lg">4.9★</div>
+                  <div className="text-sm text-gray-200 drop-shadow-md">Calificación Promedio</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-anton text-2xl font-bold text-gray-900">100%</div>
-                  <div className="text-sm text-gray-600">Garantía</div>
+                  <div className="font-anton text-2xl font-bold text-white drop-shadow-lg">100%</div>
+                  <div className="text-sm text-gray-200 drop-shadow-md">Garantía</div>
                 </div>
               </div>
             </div>
-
+{/* 
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-red-100 to-red-200 rounded-full blur-3xl opacity-30"></div>
               <Image
@@ -238,7 +270,7 @@ export default function HomePage() {
                 sizes="(max-width: 768px) 100vw, 600px"
                 className="relative z-10 w-full h-auto"
               />
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -368,7 +400,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="grid grid-cols-6 md:grid-cols-12 auto-rows-[90px] md:auto-rows-[140px] [grid-auto-flow:dense] gap-2.5 md:gap-4">
-              {categorias.map((cat, idx) => (
+              {categoriasOrdenadas.map((cat, idx) => (
                 <Link
                   key={cat.id}
                   href={`/productos/${encodeURIComponent(cat.descripcion)}`}

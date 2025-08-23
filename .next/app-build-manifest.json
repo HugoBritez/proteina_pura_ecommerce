@@ -6,20 +6,15 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/admin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/page.js"
-    ],
-    "/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/login/page.js"
-    ],
-    "/api/admin/productos/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/admin/productos/route.js"
     ],
     "/api/admin/sabores/route": [
       "static/chunks/webpack.js",
@@ -31,15 +26,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/admin/categorias/route.js"
     ],
-    "/page": [
+    "/api/admin/productos/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/api/admin/productos/route.js"
     ],
-    "/ofertas/page": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/ofertas/page.js"
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
