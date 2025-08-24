@@ -26,20 +26,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/admin/productos/route.js"
     ],
-    "/page": [
+    "/api/admin/upload/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
-    "/ofertas/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/ofertas/page.js"
-    ],
-    "/productos/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/productos/page.js"
+      "static/chunks/app/api/admin/upload/route.js"
     ]
   }
 }

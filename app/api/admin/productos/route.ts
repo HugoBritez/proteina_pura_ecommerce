@@ -34,7 +34,19 @@ const schema = z.object({
   galeria_urls: z.array(z.string().url()).optional().nullable(),
 })
 
-const updateSchema = schema.partial().extend({ id: z.number().int() })
+const updateSchema = z.object({
+  id: z.number().int(),
+  nombre: z.string().min(2).optional(),
+  descripcion: z.string().optional().nullable(),
+  precio: z.number().min(0).optional(),
+  categoria: z.number().int().optional(),
+  isActivo: z.boolean().optional(),
+  isOferta: z.boolean().optional(),
+  cantidad_stock: z.number().int().min(0).optional(),
+  sabores: z.array(z.number().int()).optional().nullable(),
+  url_imagen: z.string().optional(),
+  galeria_urls: z.array(z.string()).optional().nullable(),
+})
 
 export async function GET(req: Request) {
   const guard = await assertAdmin(req)
@@ -94,14 +106,25 @@ export async function PATCH(req: Request) {
     const { id, ...rest } = parsed
 
     const supabase = getSupabaseAdmin()
+    
+    // Preparar datos para actualizar
+    const updateData: any = {}
+    
+    // Solo incluir campos que se envían
+    if ('nombre' in rest) updateData.nombre = rest.nombre
+    if ('descripcion' in rest) updateData.descripcion = rest.descripcion ?? null
+    if ('precio' in rest) updateData.precio = rest.precio
+    if ('categoria' in rest) updateData.categoria = rest.categoria
+    if ('isActivo' in rest) updateData.isActivo = rest.isActivo
+    if ('isOferta' in rest) updateData.isOferta = rest.isOferta
+    if ('cantidad_stock' in rest) updateData.cantidad_stock = rest.cantidad_stock
+    if ('sabores' in rest) updateData.sabores = rest.sabores && rest.sabores.length ? rest.sabores : null
+    if ('url_imagen' in rest) updateData.url_imagen = rest.url_imagen || ''
+    if ('galeria_urls' in rest) updateData.galeria_urls = rest.galeria_urls && rest.galeria_urls.length ? rest.galeria_urls : null
+
     const { data, error } = await supabase
       .from('productos')
-      .update({
-        ...rest,
-        descripcion: rest.descripcion ?? null,
-        sabores: rest.sabores && rest.sabores.length ? rest.sabores : null,
-        galeria_urls: rest.galeria_urls ?? null,
-      })
+      .update(updateData)
       .eq('id', id)
       .select('*')
       .single()

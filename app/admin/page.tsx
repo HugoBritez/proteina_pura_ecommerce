@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { formatCurrency } from '@/lib/utils/formatCurrency'
+import { ImageUploader } from '@/components/ImageUploader'
+import Image from 'next/image'
 
 const schema = z.object({
   nombre: z.string().min(2),
@@ -41,6 +43,7 @@ const schema = z.object({
   cantidad_stock: z.coerce.number().int().min(0),
   sabores: z.array(z.coerce.number().int()).optional().nullable(),
   url_imagen: z.string().url().optional().default(''),
+  galeria_urls: z.array(z.string().url()).optional().default([]),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -68,6 +71,7 @@ export default function AdminPage() {
       cantidad_stock: 0,
       sabores: [],
       url_imagen: '',
+      galeria_urls: [],
     }
   })
 
@@ -107,6 +111,7 @@ export default function AdminPage() {
           descripcion: values.descripcion ?? null,
           sabores: values.sabores && values.sabores.length ? values.sabores : null,
           url_imagen: values.url_imagen ?? '',
+          galeria_urls: values.galeria_urls && values.galeria_urls.length ? values.galeria_urls : null,
         })
       })
       const json = await res.json()
@@ -247,12 +252,21 @@ export default function AdminPage() {
                     {productosFiltrados.map((p) => (
                       <TableRow key={p.id}>
                         <TableCell>
-                          {p.url_imagen ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={p.url_imagen} alt={p.nombre} className="h-10 w-10 object-cover rounded" />
-                          ) : (
-                            <div className="h-10 w-10 bg-muted rounded" />
-                          )}
+                          <div className="relative h-12 w-12 rounded-lg overflow-hidden bg-muted">
+                            <Image
+                              src={(p.galeria_urls && p.galeria_urls.length > 0 ? p.galeria_urls[0] : p.url_imagen) || 
+                                   "/placeholder.svg?height=48&width=48&text=" + encodeURIComponent(p.nombre)}
+                              alt={p.nombre}
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                            />
+                            {p.galeria_urls && p.galeria_urls.length > 1 && (
+                              <div className="absolute bottom-0 right-0 bg-black/60 text-white text-xs px-1 rounded-tl">
+                                +{p.galeria_urls.length - 1}
+                              </div>
+                            )}
+                          </div>  
                         </TableCell>
                         <TableCell className="max-w-[260px]">
                           <div className="font-medium truncate">{p.nombre}</div>
@@ -278,14 +292,11 @@ export default function AdminPage() {
                               <DialogTrigger asChild>
                                 <Button size="sm" variant="outline">Editar</Button>
                               </DialogTrigger>
-                              <DialogContent className="sm:max-w-[700px]">
+                              <DialogContent className="sm:max-w-[900px] max-h-[90vh]">
                                 <DialogHeader>
                                   <DialogTitle>Editar producto</DialogTitle>
                                 </DialogHeader>
-                                <ProductoEditor p={p} onSaved={async () => { await refreshProductos(); toast({ title: 'Producto actualizado' }) }} />
-                                <DialogFooter>
-                                  <Button onClick={async () => { await refreshProductos() }}>Actualizar lista</Button>
-                                </DialogFooter>
+                                <ProductoEditor p={p} onSaved={async () => { await refreshProductos() }} />
                               </DialogContent>
                             </Dialog>
                             <AlertDialog>
@@ -346,103 +357,180 @@ export default function AdminPage() {
               <h2 className="font-semibold">Nuevo producto</h2>
             </CardHeader>
             <CardContent>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                <div className="space-y-2">
-                  <Label>Nombre</Label>
-                  <Input {...form.register('nombre')} placeholder="Nombre" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Descripción</Label>
-                  <Input {...form.register('descripcion')} placeholder="Descripción" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Precio</Label>
-                    <Input type="number" step="1" {...form.register('precio')} />
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Información básica */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-foreground border-b pb-2">Información básica</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nombre">Nombre *</Label>
+                      <Input 
+                        id="nombre"
+                        {...form.register('nombre')} 
+                        placeholder="Ej: Proteína Whey Vainilla"
+                        className={form.formState.errors.nombre ? 'border-destructive' : ''}
+                      />
+                      {form.formState.errors.nombre && (
+                        <p className="text-sm text-destructive">{form.formState.errors.nombre.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="categoria">Categoría *</Label>
+                      <Select onValueChange={(v) => form.setValue('categoria', Number(v))}>
+                        <SelectTrigger className={form.formState.errors.categoria ? 'border-destructive' : ''}>
+                          <SelectValue placeholder="Selecciona categoría" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categorias.map((c) => (
+                            <SelectItem key={c.id} value={String(c.id)}>{c.descripcion}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {form.formState.errors.categoria && (
+                        <p className="text-sm text-destructive">{form.formState.errors.categoria.message}</p>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Stock</Label>
-                    <Input type="number" {...form.register('cantidad_stock')} />
+                    <Label htmlFor="descripcion">Descripción</Label>
+                    <Input 
+                      id="descripcion"
+                      {...form.register('descripcion')} 
+                      placeholder="Descripción detallada del producto"
+                    />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Categoría</Label>
-                  <Select onValueChange={(v) => form.setValue('categoria', Number(v))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categorias.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>{c.descripcion}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+                {/* Precios y stock */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-foreground border-b pb-2">Precios y stock</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="precio">Precio *</Label>
+                      <Input 
+                        id="precio"
+                        type="number" 
+                        step="1" 
+                        {...form.register('precio')}
+                        placeholder="0"
+                        className={form.formState.errors.precio ? 'border-destructive' : ''}
+                      />
+                      {form.formState.errors.precio && (
+                        <p className="text-sm text-destructive">{form.formState.errors.precio.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stock">Stock inicial *</Label>
+                      <Input 
+                        id="stock"
+                        type="number" 
+                        {...form.register('cantidad_stock')}
+                        placeholder="0"
+                        className={form.formState.errors.cantidad_stock ? 'border-destructive' : ''}
+                      />
+                      {form.formState.errors.cantidad_stock && (
+                        <p className="text-sm text-destructive">{form.formState.errors.cantidad_stock.message}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Sabores</Label>
-                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-auto p-2 border rounded-md bg-white">
+
+                {/* Sabores */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-foreground border-b pb-2">Sabores disponibles</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-auto p-3 border rounded-lg bg-muted/30">
                     {sabores.map((s) => {
                       const checked = (form.watch('sabores') || []).includes(s.id)
                       return (
-                        <label key={s.id} className="flex items-center gap-2 text-sm">
+                        <label key={s.id} className="flex items-center gap-2 text-sm p-1 hover:bg-background/50 rounded cursor-pointer">
                           <Checkbox checked={checked} onCheckedChange={(v) => {
                             const current = form.getValues('sabores') || []
                             if (v) form.setValue('sabores', [...current, s.id])
                             else form.setValue('sabores', current.filter((x) => x !== s.id))
                           }} />
-                          {s.descripcion}
+                          <span className="truncate">{s.descripcion}</span>
                         </label>
                       )
                     })}
                   </div>
+                  <p className="text-xs text-muted-foreground">Selecciona los sabores disponibles para este producto</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={form.watch('isActivo')} onCheckedChange={(v) => form.setValue('isActivo', Boolean(v))} />
-                    Activo
-                  </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={form.watch('isOferta')} onCheckedChange={(v) => form.setValue('isOferta', Boolean(v))} />
-                    Oferta
-                  </label>
-                </div>
-                <div className="space-y-2">
-                  <Label>Imagen principal</Label>
-                  <div className="flex items-center gap-4">
-                    {form.watch('url_imagen') ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={form.watch('url_imagen')!} alt="preview" className="h-16 w-16 object-cover rounded border" />
-                    ) : (
-                      <div className="h-16 w-16 rounded border bg-muted" />
-                    )}
-                    <div className="flex-1 space-y-2">
-                      <Input {...form.register('url_imagen')} placeholder="https://..." />
-                      <input type="file" accept="image/*" onChange={async (e) => {
-                        const file = e.target.files?.[0]
-                        if (!file) return
-                        try {
-                          const session = (await supabase.auth.getSession()).data.session
-                          if (!session) throw new Error('No autenticado')
-                          const token = session.access_token
-                          const path = `productos/${Date.now()}_${file.name}`
-                          const formData = new FormData()
-                          formData.append('file', file)
-                          formData.append('path', path)
-                          const res = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData })
-                          const json = await res.json()
-                          if (!res.ok) throw new Error(json.error || 'Error subiendo archivo')
-                          form.setValue('url_imagen', json.publicUrl)
-                          toast({ title: 'Imagen subida' })
-                        } catch (err: any) {
-                          toast({ title: 'Error subiendo imagen', description: err.message })
-                        }
-                      }} />
-                    </div>
+
+                {/* Estados */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-foreground border-b pb-2">Estado del producto</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="p-4">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <Checkbox checked={form.watch('isActivo')} onCheckedChange={(v) => form.setValue('isActivo', Boolean(v))} />
+                        <div>
+                          <div className="font-medium">Producto activo</div>
+                          <div className="text-sm text-muted-foreground">Visible en la tienda</div>
+                        </div>
+                      </label>
+                    </Card>
+                    <Card className="p-4">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <Checkbox checked={form.watch('isOferta')} onCheckedChange={(v) => form.setValue('isOferta', Boolean(v))} />
+                        <div>
+                          <div className="font-medium">En oferta</div>
+                          <div className="text-sm text-muted-foreground">Aparece en sección ofertas</div>
+                        </div>
+                      </label>
+                    </Card>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</Button>
-                  <Button type="button" variant="outline" onClick={() => form.reset()}>Limpiar</Button>
+
+                {/* Imágenes */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-foreground border-b pb-2">Imágenes del producto</h3>
+                  <div className="space-y-4">
+                    <ImageUploader 
+                      value={form.watch('url_imagen')} 
+                      onChange={(url) => form.setValue('url_imagen', typeof url === 'string' ? url : '')}
+                      multiple={false}
+                      label="Imagen principal *"
+                    />
+                    <ImageUploader 
+                      value={form.watch('galeria_urls')} 
+                      onChange={(urls) => form.setValue('galeria_urls', Array.isArray(urls) ? urls : [urls])}
+                      multiple={true}
+                      label="Galería de imágenes adicionales (opcional)"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      La imagen principal se mostrará en las tarjetas de producto. Las imágenes de galería se verán en la página de detalle.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                  <Button 
+                    type="submit" 
+                    disabled={loading}
+                    className="flex-1 sm:flex-none"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Guardando producto...
+                      </>
+                    ) : (
+                      'Crear producto'
+                    )}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      form.reset()
+                      toast({ title: 'Formulario limpiado' })
+                    }}
+                    disabled={loading}
+                    className="flex-1 sm:flex-none"
+                  >
+                    Limpiar formulario
+                  </Button>
                 </div>
               </form>
             </CardContent>
@@ -458,6 +546,7 @@ function ProductoEditor({ p, onSaved }: { p: Producto, onSaved: () => void }) {
   const [stock, setStock] = useState<number>(p.cantidad_stock)
   const [activo, setActivo] = useState<boolean>(p.isActivo)
   const [oferta, setOferta] = useState<boolean>(p.isOferta)
+  const [imagenPrincipal, setImagenPrincipal] = useState<string>(p.url_imagen || '')
   const [galeria, setGaleria] = useState<string[]>(p.galeria_urls || [])
   const [saving, setSaving] = useState(false)
 
@@ -465,72 +554,134 @@ function ProductoEditor({ p, onSaved }: { p: Producto, onSaved: () => void }) {
     try {
       setSaving(true)
       const token = (await supabase.auth.getSession()).data.session?.access_token
+      
+      const updatePayload = { 
+        id: p.id, 
+        precio, 
+        cantidad_stock: stock, 
+        isActivo: activo, 
+        isOferta: oferta, 
+        url_imagen: imagenPrincipal,
+        galeria_urls: galeria 
+      }
+      
+      console.log('Updating product with payload:', updatePayload)
+      
       const res = await fetch('/api/admin/productos', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) } as Record<string, string>,
-        body: JSON.stringify({ id: p.id, precio, cantidad_stock: stock, isActivo: activo, isOferta: oferta, galeria_urls: galeria })
+        body: JSON.stringify(updatePayload)
       })
       const j = await res.json()
-      if (!res.ok) throw new Error(j.error || 'No se pudo actualizar')
+      if (!res.ok) {
+        console.error('Error updating product:', j)
+        throw new Error(j.error || 'No se pudo actualizar')
+      }
+      toast({ title: 'Producto actualizado correctamente' })
       onSaved()
     } catch (e: any) {
-      toast({ title: 'Error', description: e.message })
+      toast({ title: 'Error', description: e.message, variant: 'destructive' })
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <div>
-        <Label>Precio</Label>
-        <Input type="number" value={precio} onChange={(e) => setPrecio(Number(e.target.value))} />
-      </div>
-      <div>
-        <Label>Stock</Label>
-        <Input type="number" value={stock} onChange={(e) => setStock(Number(e.target.value))} />
-      </div>
-      <label className="flex items-center gap-2 text-sm">
-        <Checkbox checked={activo} onCheckedChange={(v) => setActivo(Boolean(v))} />
-        Activo
-      </label>
-      <label className="flex items-center gap-2 text-sm">
-        <Checkbox checked={oferta} onCheckedChange={(v) => setOferta(Boolean(v))} />
-        Oferta
-      </label>
-      <div className="md:col-span-2">
-        <Label>Galería</Label>
-        <div className="flex flex-wrap gap-2">
-          {galeria.map((u, i) => (
-            <div key={i} className="flex items-center gap-2 border rounded px-2 py-1 text-xs">
-              <span className="truncate max-w-[200px]">{u}</span>
-              <Button size="sm" variant="ghost" onClick={() => setGaleria(galeria.filter((_, idx) => idx !== i))}>Quitar</Button>
-            </div>
-          ))}
+    <div className="space-y-6 max-h-[70vh] overflow-y-auto">
+      {/* Información del producto */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 pb-2 border-b">
+          <h4 className="font-medium">Editando: {p.nombre}</h4>
+          <span className="text-xs text-muted-foreground">ID: {p.id}</span>
         </div>
-        <input type="file" accept="image/*" className="mt-2" onChange={async (e) => {
-          const file = e.target.files?.[0]
-          if (!file) return
-          try {
-            const session = (await supabase.auth.getSession()).data.session
-            if (!session) throw new Error('No autenticado')
-            const token = session.access_token
-            const path = `productos/${p.id}/${Date.now()}_${file.name}`
-            const formData = new FormData()
-            formData.append('file', file)
-            formData.append('path', path)
-            const res = await fetch('/api/admin/upload', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData })
-            const json = await res.json()
-            if (!res.ok) throw new Error(json.error || 'Error subiendo archivo')
-            setGaleria((g) => [...g, json.publicUrl])
-            toast({ title: 'Imagen agregada a galería' })
-          } catch (err: any) {
-            toast({ title: 'Error subiendo imagen', description: err.message })
-          }
-        }} />
       </div>
-      <div className="md:col-span-2 flex gap-2 mt-2">
-        <Button onClick={save} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</Button>
+
+      {/* Precios y stock */}
+      <div className="space-y-4">
+        <h5 className="font-medium text-sm">Precios y stock</h5>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="edit-precio">Precio</Label>
+            <Input 
+              id="edit-precio"
+              type="number" 
+              value={precio} 
+              onChange={(e) => setPrecio(Number(e.target.value))}
+              placeholder="0"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-stock">Stock</Label>
+            <Input 
+              id="edit-stock"
+              type="number" 
+              value={stock} 
+              onChange={(e) => setStock(Number(e.target.value))}
+              placeholder="0"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Estados */}
+      <div className="space-y-4">
+        <h5 className="font-medium text-sm">Estado del producto</h5>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Card className="p-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={activo} onCheckedChange={(v) => setActivo(Boolean(v))} />
+              <div>
+                <div className="font-medium text-sm">Producto activo</div>
+                <div className="text-xs text-muted-foreground">Visible en la tienda</div>
+              </div>
+            </label>
+          </Card>
+          <Card className="p-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <Checkbox checked={oferta} onCheckedChange={(v) => setOferta(Boolean(v))} />
+              <div>
+                <div className="font-medium text-sm">En oferta</div>
+                <div className="text-xs text-muted-foreground">Aparece en ofertas</div>
+              </div>
+            </label>
+          </Card>
+        </div>
+      </div>
+
+      {/* Imagen principal */}
+      <div className="space-y-4">
+        <h5 className="font-medium text-sm">Imagen principal</h5>
+        <ImageUploader 
+          value={imagenPrincipal} 
+          onChange={(url) => setImagenPrincipal(typeof url === 'string' ? url : '')}
+          multiple={false}
+          label=""
+        />
+      </div>
+
+      {/* Galería */}
+      <div className="space-y-4">
+        <h5 className="font-medium text-sm">Galería de imágenes</h5>
+        <ImageUploader 
+          value={galeria} 
+          onChange={(urls) => setGaleria(Array.isArray(urls) ? urls : [urls])}
+          multiple={true}
+          label=""
+        />
+      </div>
+
+      {/* Botón guardar */}
+      <div className="flex gap-2 pt-4 border-t">
+        <Button onClick={save} disabled={saving} className="flex-1">
+          {saving ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Guardando...
+            </>
+          ) : (
+            'Guardar cambios'
+          )}
+        </Button>
       </div>
     </div>
   )
