@@ -16,7 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Star, Filter, Plus, Search } from 'lucide-react'
+import { Star, Filter, Plus, Search, CheckCircle } from 'lucide-react'
+import Link from 'next/link'
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getProductos, getCategorias, getSabores, buscarProductos } from "@/lib/products"
@@ -39,6 +40,17 @@ export default function ProductsPage() {
   const [showOnlyOffers, setShowOnlyOffers] = useState(false)
 
   const { addToCart, getCartItemsCount } = useCart()
+
+  // Estado para feedback visual del carrito
+  const [showCartFeedback, setShowCartFeedback] = useState(false)
+  const [lastAddedProduct, setLastAddedProduct] = useState<string>("")
+
+  // Función para manejar feedback del carrito
+  const handleAddToCart = (productName: string) => {
+    setLastAddedProduct(productName)
+    setShowCartFeedback(true)
+    setTimeout(() => setShowCartFeedback(false), 3000)
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -337,6 +349,7 @@ export default function ProductsPage() {
                     addToCart={addToCart}
                     getBadgeText={getBadgeText}
                     calculateDiscount={calculateDiscount}
+                    onAddToCart={handleAddToCart}
                   />
                 ))}
               </div>
@@ -365,6 +378,30 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+
+      {/* Mini Cart Feedback */}
+      {showCartFeedback && (
+        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-right-8 fade-in duration-300">
+          <div className="bg-green-600 text-white p-4 rounded-lg shadow-xl border border-green-500 min-w-[300px]">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <CheckCircle className="h-6 w-6 text-green-200" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm">¡Agregado al carrito!</h3>
+                <p className="text-green-100 text-xs mt-1 line-clamp-1">{lastAddedProduct}</p>
+              </div>
+              <div className="flex-shrink-0">
+                <Link href="/carrito">
+                  <Button size="sm" variant="outline" className="bg-transparent border-green-300 text-green-100 hover:bg-green-500 hover:text-white text-xs px-3 py-1">
+                    Ver Carrito ({getCartItemsCount()})
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

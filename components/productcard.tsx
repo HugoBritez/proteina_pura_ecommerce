@@ -13,6 +13,7 @@ interface ProductCardProps {
   addToCart: (producto: ProductoConDetalles, sabor?: Sabor) => void;
   getBadgeText: (producto: ProductoConDetalles) => string | null;
   calculateDiscount: (precio: number) => number;
+  onAddToCart?: (productName: string) => void;
 }
 
 export function ProductCard({
@@ -20,6 +21,7 @@ export function ProductCard({
   addToCart,
   getBadgeText,
   calculateDiscount,
+  onAddToCart,
 }: ProductCardProps) {
   const [saborSeleccionado, setSaborSeleccionado] = useState<Sabor | null>(
     producto.sabores_info && producto.sabores_info.length > 0
@@ -171,7 +173,11 @@ export function ProductCard({
           </Button>
         ) : (
           <Button
-            onClick={() => addToCart(producto, saborSeleccionado || undefined)}
+            onClick={() => {
+              console.log('ProductCard: Adding to cart:', producto.nombre)
+              addToCart(producto, saborSeleccionado || undefined)
+              onAddToCart?.(producto.nombre)
+            }}
             disabled={
               producto.sabores_info &&
               producto.sabores_info.length > 0 &&

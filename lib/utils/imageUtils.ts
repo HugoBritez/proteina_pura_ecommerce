@@ -23,8 +23,30 @@ export function getOptimizedImageUrl(
 }
 
 export function getProductPlaceholder(productName: string, width: number = 300, height: number = 300): string {
-  const encodedName = encodeURIComponent(productName);
-  return `https://via.placeholder.com/${width}x${height}/f3f4f6/6b7280?text=${encodedName}`;
+  return generateSVGPlaceholder(productName, width, height, '#f3f4f6', '#6b7280');
+}
+
+export function generateCategoryPlaceholder(categoryName: string, bgColor: string, textColor: string, width: number = 400, height: number = 300): string {
+  return generateSVGPlaceholder(categoryName, width, height, bgColor, textColor);
+}
+
+function generateSVGPlaceholder(text: string, width: number, height: number, bgColor: string, textColor: string): string {
+  const fontSize = Math.min(width, height) * 0.15;
+  const svg = `
+    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${bgColor}" stop-opacity="0.8"/>
+          <stop offset="50%" stop-color="${bgColor}" stop-opacity="1"/>
+          <stop offset="100%" stop-color="${bgColor}" stop-opacity="0.8"/>
+        </linearGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#gradient)"/>
+      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="bold" text-anchor="middle" dy="0.3em" fill="${textColor}">${text}</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 }
 
 // Blur placeholder base64 gris claro para mejor UX

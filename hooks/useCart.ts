@@ -41,19 +41,23 @@ export function useCart() {
   }, [cart, isLoading])
 
   const addToCart = useCallback((producto: ProductoConDetalles, sabor?: Sabor) => {
+    console.log('useCart: addToCart called for:', producto.nombre, 'sabor:', sabor?.descripcion)
     setCart(prevCart => {
+      console.log('useCart: Current cart items:', prevCart.length)
       const existingItemIndex = prevCart.findIndex(
-        item => item.producto.id === producto.id && 
+        item => item.producto.id === producto.id &&
                  item.sabor_seleccionado?.id === sabor?.id
       )
 
       if (existingItemIndex > -1) {
         // Si el producto ya existe, incrementar cantidad
+        console.log('useCart: Product exists, incrementing quantity from', prevCart[existingItemIndex].quantity, 'to', prevCart[existingItemIndex].quantity + 1)
         const updatedCart = [...prevCart]
         updatedCart[existingItemIndex].quantity += 1
         return updatedCart
       } else {
         // Si es nuevo, agregarlo al carrito
+        console.log('useCart: Adding new product to cart')
         return [...prevCart, {
           producto,
           quantity: 1,

@@ -7,17 +7,21 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Star, Truck, Shield, Award, Users, ArrowRight, Plus } from 'lucide-react'
+import { Star, Truck, Shield, Award, Users, ArrowRight, Plus, Search, MessageCircle, CheckCircle, ShoppingCart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { getProductosDestacados, getCategorias } from "@/lib/products"
 import { formatCurrency } from "@/lib/utils/formatCurrency"
 import { useCart } from "@/hooks/useCart"
-import { getOptimizedImageUrl, getProductPlaceholder, LIGHT_BLUR_PLACEHOLDER } from "@/lib/utils/imageUtils"
+import { getOptimizedImageUrl, getProductPlaceholder, generateCategoryPlaceholder, LIGHT_BLUR_PLACEHOLDER } from "@/lib/utils/imageUtils"
 import type { ProductoConDetalles, Categoria } from "@/types/database"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, CarouselIndicators } from "@/components/ui/carousel"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { empresa } from "@/lib/consts/empresa.data"
 
 const benefits = [
@@ -109,6 +113,12 @@ export default function HomePage() {
   const { addToCart, getCartItemsCount } = useCart()
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [categoriasLoading, setCategoriasLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const router = useRouter()
+
+  // Estado para feedback visual del carrito
+  const [showCartFeedback, setShowCartFeedback] = useState(false)
+  const [lastAddedProduct, setLastAddedProduct] = useState<string>("")
 
   useEffect(() => {
     async function loadFeaturedProducts() {
@@ -211,6 +221,94 @@ export default function HomePage() {
     return `${bentoPattern[index % bentoPattern.length]}`
   }
 
+  // Estado para manejar las imágenes de categorías con carousel
+  const [categoryImageIndexes, setCategoryImageIndexes] = useState<{ [key: number]: number }>({})
+
+  // Función para obtener todas las imágenes de una categoría
+  const getCategoryImages = (categoria: Categoria) => {
+    const productsFromCategory = featuredProducts.filter(p =>
+      p.categoria_info?.id === categoria.id &&
+      (p.url_imagen || (p.galeria_urls && p.galeria_urls.length > 0))
+    )
+
+    const images: string[] = []
+
+    productsFromCategory.forEach(product => {
+      // Agregar galería si existe
+      if (product.galeria_urls && product.galeria_urls.length > 0) {
+        product.galeria_urls.forEach(url => {
+          images.push(getOptimizedImageUrl(url, 400, 300))
+        })
+      }
+      // Agregar imagen principal si existe y no está ya en galería
+      else if (product.url_imagen) {
+        images.push(getOptimizedImageUrl(product.url_imagen, 400, 300))
+      }
+    })
+
+    return images
+  }
+
+  // Función para obtener imagen actual de una categoría (con carousel)
+  const getCategoryImage = (categoria: Categoria) => {
+    const images = getCategoryImages(categoria)
+
+    if (images.length === 0) {
+      // Fallback a placeholder temático con colores por categoría
+      const colorMap: { [key: string]: { bg: string, text: string } } = {
+        'proteínas': { bg: '#3b82f6', text: '#ffffff' },
+        'creatinas': { bg: '#10b981', text: '#ffffff' },
+        'combos': { bg: '#f59e0b', text: '#ffffff' },
+        'quemadores': { bg: '#ef4444', text: '#ffffff' },
+        'preentrenos': { bg: '#8b5cf6', text: '#ffffff' },
+        'aminoácidos': { bg: '#06b6d4', text: '#ffffff' },
+        'aminos': { bg: '#06b6d4', text: '#ffffff' },
+        'salud': { bg: '#84cc16', text: '#ffffff' }
+      }
+
+      const categoryKey = categoria.descripcion.toLowerCase()
+      const colorKey = Object.keys(colorMap).find(key => categoryKey.includes(key)) || 'default'
+      const colors = colorMap[colorKey] || { bg: '#f3f4f6', text: '#6b7280' }
+
+      return generateCategoryPlaceholder(categoria.descripcion, colors.bg, colors.text, 400, 300)
+    }
+
+    // Obtener índice actual para esta categoría
+    const currentIndex = categoryImageIndexes[categoria.id] || 0
+    return images[currentIndex % images.length]
+  }
+
+  // Efecto para rotar imágenes automáticamente
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCategoryImageIndexes(prev => {
+        const newIndexes = { ...prev }
+
+        categoriasOrdenadas.forEach(categoria => {
+          const images = getCategoryImages(categoria)
+          if (images.length > 1) {
+            newIndexes[categoria.id] = ((prev[categoria.id] || 0) + 1) % images.length
+          }
+        })
+
+        return newIndexes
+      })
+    }, 3000) // Cambiar imagen cada 3 segundos
+
+    return () => clearInterval(interval)
+  }, [categoriasOrdenadas, featuredProducts])
+
+  // Función para manejar búsqueda
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      router.push(`/productos?search=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
+  // Función para calcular proteína necesaria
+
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -236,6 +334,7 @@ export default function HomePage() {
                 </p>
               </div>
 
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/productos">
                   <Button
@@ -246,13 +345,16 @@ export default function HomePage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
+
+
                 <Link href={`https://wa.me/${empresa.telefono.replace(/\s/g, '')}`} target="_blank">
                   <Button
                     variant="outline"
                     size="lg"
-                    className="border-red-200 text-red-600 hover:bg-red-50 px-8 py-4 text-lg bg-transparent"
+                    className="border-green-400 text-green-600 hover:bg-green-50 px-8 py-4 text-lg bg-white/95 backdrop-blur-sm"
                   >
-                    Asesoría Gratis
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Asesoría Gratis por WhatsApp
                   </Button>
                 </Link>
               </div>
@@ -367,7 +469,13 @@ export default function HomePage() {
 
                       <CardFooter className="p-4 pt-0">
                         <Button
-                          onClick={() => addToCart(producto, producto.sabores_info?.[0])}
+                          onClick={() => {
+                            console.log('Adding to cart:', producto.nombre)
+                            addToCart(producto, producto.sabores_info?.[0])
+                            setLastAddedProduct(producto.nombre)
+                            setShowCartFeedback(true)
+                            setTimeout(() => setShowCartFeedback(false), 3000)
+                          }}
                           disabled={producto.cantidad_stock === 0}
                           className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -427,9 +535,12 @@ export default function HomePage() {
                 >
                   <div className="relative h-full w-full rounded-xl overflow-hidden">
                     <Image
-                      src={`/placeholder.svg?height=320&width=640&text=${encodeURIComponent(cat.descripcion)}`}
+                      src={getCategoryImage(cat)}
                       alt={cat.descripcion}
                       fill
+                      loading="lazy"
+                      placeholder="blur"
+                      blurDataURL={LIGHT_BLUR_PLACEHOLDER}
                       sizes="(max-width: 768px) 50vw, 25vw"
                       className="object-cover"
                     />
@@ -441,6 +552,102 @@ export default function HomePage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Why Choose Proteína Pura Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-4 mb-16">
+            <h2 className="font-anton text-4xl lg:text-5xl font-bold text-gray-900">¿POR QUÉ ELEGIR PROTEÍNA PURA?</h2>
+            <p className="text-xl text-gray-600 font-roboto max-w-3xl mx-auto">
+              No somos solo otra tienda de suplementos. Somos tu aliado para alcanzar tus objetivos fitness.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Diferenciador 1 */}
+            <div className="text-center space-y-4 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
+                <Shield className="h-8 w-8 text-red-600" />
+              </div>
+              <h3 className="font-anton text-xl font-bold text-gray-900">100% Auténtico</h3>
+              <p className="text-gray-600 font-roboto">
+                Importamos directamente de fabricantes certificados. Cada producto incluye códigos de verificación de autenticidad.
+              </p>
+            </div>
+
+            {/* Diferenciador 2 */}
+            <div className="text-center space-y-4 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full">
+                <Award className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="font-anton text-xl font-bold text-gray-900">Garantía de Precio</h3>
+              <p className="text-gray-600 font-roboto">
+                Si encontrás un precio menor en cualquier otro lugar, igualamos el precio + 5% de descuento adicional.
+              </p>
+            </div>
+
+            {/* Diferenciador 3 */}
+            <div className="text-center space-y-4 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full">
+                <Users className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="font-anton text-xl font-bold text-gray-900">Asesoría Especializada</h3>
+              <p className="text-gray-600 font-roboto">
+                Nuestro equipo incluye nutricionistas y entrenadores certificados. Consultas gratuitas por WhatsApp.
+              </p>
+            </div>
+
+            {/* Diferenciador 4 */}
+            <div className="text-center space-y-4 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full">
+                <Truck className="h-8 w-8 text-yellow-600" />
+              </div>
+              <h3 className="font-anton text-xl font-bold text-gray-900">Envío Express</h3>
+              <p className="text-gray-600 font-roboto">
+                Entrega en 24-48hs en Asunción y Gran Asunción. Envío gratis en compras mayores a 500.000 Gs.
+              </p>
+            </div>
+
+            {/* Diferenciador 5 */}
+            <div className="text-center space-y-4 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full">
+                <Star className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="font-anton text-xl font-bold text-gray-900">4.9/5 en Reseñas</h3>
+              <p className="text-gray-600 font-roboto">
+                +50,000 clientes satisfechos nos respaldan. Leé testimonios reales en nuestras redes sociales.
+              </p>
+            </div>
+
+            {/* Diferenciador 6 */}
+            <div className="text-center space-y-4 p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
+                <ArrowRight className="h-8 w-8 text-red-600" />
+              </div>
+              <h3 className="font-anton text-xl font-bold text-gray-900">Satisfacción Garantizada</h3>
+              <p className="text-gray-600 font-roboto">
+                30 días para devolver cualquier producto si no estás 100% satisfecho. Sin preguntas ni complicaciones.
+              </p>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center mt-12">
+            <Link href="/productos">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium px-12 py-4 text-lg"
+              >
+                Empezar mi Transformación
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <p className="text-sm text-gray-500 mt-3">
+              Únete a +50,000 atletas que ya confían en nosotros
+            </p>
+          </div>
         </div>
       </section>
 
@@ -579,16 +786,52 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Floating WhatsApp/Asesoría Button */}
+      {/* Mini Cart Feedback */}
+      {showCartFeedback && (
+        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-right-8 fade-in duration-300">
+          <div className="bg-green-600 text-white p-4 rounded-lg shadow-xl border border-green-500 min-w-[300px]">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <CheckCircle className="h-6 w-6 text-green-200" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm">¡Agregado al carrito!</h3>
+                <p className="text-green-100 text-xs mt-1 line-clamp-1">{lastAddedProduct}</p>
+              </div>
+              <div className="flex-shrink-0">
+                <Link href="/carrito">
+                  <Button size="sm" variant="outline" className="bg-transparent border-green-300 text-green-100 hover:bg-green-500 hover:text-white text-xs px-3 py-1">
+                    Ver Carrito ({getCartItemsCount()})
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating WhatsApp Button - Mejorado */}
       <Link
         href={`https://wa.me/${empresa.telefono.replace(/\s/g, '')}`}
         target="_blank"
         aria-label="Asesoría por WhatsApp"
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed bottom-6 right-6 z-50 group"
       >
-        <Button className="rounded-full h-14 w-14 p-0 shadow-lg bg-red-600 hover:bg-red-700">
-          <Users className="h-6 w-6 text-white" />
-        </Button>
+        <div className="relative">
+          {/* Animación de pulso */}
+          <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
+
+          {/* Botón principal */}
+          <Button className="relative rounded-full h-16 w-16 p-0 shadow-xl bg-green-500 hover:bg-green-600 transition-all duration-300 group-hover:scale-110">
+            <MessageCircle className="h-7 w-7 text-white" />
+          </Button>
+
+          {/* Tooltip/Label */}
+          <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+            💬 Asesoría Gratis
+            <div className="absolute top-1/2 -translate-y-1/2 left-full border-4 border-transparent border-l-gray-900"></div>
+          </div>
+        </div>
       </Link>
 
       {/* Structured Data */}
