@@ -73,20 +73,32 @@ const testimonials = [
 
 const faqs = [
   {
-    q: "¿Cuál es la mejor proteína para ganar masa muscular?",
-    a: "La Whey Protein es ideal por su rápida absorción post‑entreno. Para períodos largos sin comer, la caseína ayuda por su liberación sostenida.",
+    q: "¿Qué suplemento me conviene si soy principiante?",
+    a: "Si recién estás empezando, lo ideal es comenzar con lo básico: una proteína para cubrir tus requerimientos diarios y un multivitamínico para mantener tu energía. Después, según tu progreso, podés sumar creatina, preentrenos u otros productos más específicos.",
   },
   {
-    q: "¿Hacen envíos a todo el país?",
-    a: "Sí. Envío gratis en pedidos superiores a Gs 50.000 y tiempos de entrega de 24‑72h según ciudad.",
+    q: "¿Puedo tomar varios suplementos al mismo tiempo?",
+    a: "Sí, muchos suplementos se pueden combinar sin problema. Por ejemplo: proteína + creatina + multivitamínico es una combinación muy usada. La clave es elegir los correctos y respetar las dosis recomendadas. Nuestro equipo puede asesorarte en cómo armar tu combo.",
   },
   {
-    q: "¿Cómo elegir entre Whey, Caseína o Vegetal?",
-    a: "Whey para recuperación rápida, Caseína para saciedad prolongada y Vegetal para dietas veganas o con intolerancia a lácteos.",
+    q: "¿Necesito entrenar para tomar suplementos?",
+    a: "No necesariamente. Muchos suplementos también ayudan a complementar la alimentación diaria (como multivitamínicos, omega-3, colágeno o proteína para cubrir requerimientos de dieta). Eso sí, con ejercicio los resultados son más visibles.",
   },
   {
-    q: "¿Puedo devolver un producto?",
-    a: "Aceptamos cambios y devoluciones dentro de 7 días si el producto está cerrado y en perfecto estado.",
+    q: "¿Cuándo y cómo debo tomar la proteína?",
+    a: "Lo más común es: • Después del entrenamiento → para recuperación muscular. • En el desayuno o entre comidas → para cubrir requerimientos de proteínas diarios. La cantidad depende de tu peso, tu dieta y tu nivel de actividad.",
+  },
+  {
+    q: "¿Hacen envíos a todo Paraguay?",
+    a: "Sí. Trabajamos con envíos a todo el país mediante transportadoras de confianza. El tiempo de entrega promedio es de 24 a 72 horas hábiles, dependiendo de la ciudad. También podés retirar tu pedido o solicitar tu delivery en el día en Asunción o Coronel Oviedo.",
+  },
+  {
+    q: "¿Cuáles son las formas de pago disponibles?",
+    a: "Podés pagar mediante transferencia bancaria, billeteras electrónicas, tarjeta de crédito/débito. En Asunción Coronel Oviedo y Ciudad del Este, podes pagar contra entrega (pagas al recibir tus suplementos), pagando previamente el costo del envío. Siempre te damos opciones seguras y fáciles.",
+  },
+  {
+    q: "¿Los suplementos reemplazan la comida?",
+    a: "No, los suplementos no sustituyen una dieta balanceada. Son un complemento para cubrir lo que muchas veces no logramos obtener solo con la alimentación. Una buena nutrición + entrenamiento + descanso son la base; los suplementos potencian tus resultados.",
   },
 ] 
 
@@ -135,7 +147,7 @@ export default function HomePage() {
 
   const calculateDiscount = (precio: number) => {
     // Simular precio original con 20% de descuento
-    return Math.round(precio * 1.25)
+    return Math.round(precio * 1.20)
   }
 
   // Orden de importancia para las categorías
@@ -205,9 +217,9 @@ export default function HomePage() {
       <Header cartItems={getCartItemsCount()} />
 
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 bg-cover bg-center bg-no-repeat bg-[url('/ppmobile.jpg')] md:bg-[url('/ppdesktop.jpg')]">
+      <section className="relative py-20 lg:py-32 bg-cover bg-center bg-no-repeat bg-[url('/ppdesktop.jpg')]">
         {/* Overlay para mejorar legibilidad del texto */}
-        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="absolute inset-0 bg-black/80"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
@@ -229,11 +241,11 @@ export default function HomePage() {
                     size="lg"
                     className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium px-8 py-4 text-lg"
                   >
-                    Ver Productos
+                    Ver todos los suplementos
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Link href="/contacto">
+                <Link href={`https://wa.me/${empresa.telefono.replace(/\s/g, '')}`} target="_blank">
                   <Button
                     variant="outline"
                     size="lg"
@@ -314,7 +326,7 @@ export default function HomePage() {
                             src={producto.url_imagen || "/placeholder.svg?height=200&width=200&text=" + encodeURIComponent(producto.nombre)}
                             alt={producto.nombre}
                             width={200}
-                            height={200}
+                            height={200}  
                             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">
@@ -564,7 +576,8 @@ export default function HomePage() {
 
       {/* Floating WhatsApp/Asesoría Button */}
       <Link
-        href="/contacto"
+        href={`https://wa.me/${empresa.telefono.replace(/\s/g, '')}`}
+        target="_blank"
         aria-label="Asesoría por WhatsApp"
         className="fixed bottom-6 right-6 z-50"
       >
