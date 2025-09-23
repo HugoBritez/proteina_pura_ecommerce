@@ -13,6 +13,7 @@ import { Footer } from "@/components/footer"
 import { getProductosDestacados, getCategorias } from "@/lib/products"
 import { formatCurrency } from "@/lib/utils/formatCurrency"
 import { useCart } from "@/hooks/useCart"
+import { getOptimizedImageUrl, getProductPlaceholder, LIGHT_BLUR_PLACEHOLDER } from "@/lib/utils/imageUtils"
 import type { ProductoConDetalles, Categoria } from "@/types/database"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, CarouselIndicators } from "@/components/ui/carousel"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
@@ -323,11 +324,15 @@ export default function HomePage() {
                       <CardHeader className="relative p-0">
                         <div className="relative overflow-hidden rounded-t-lg">
                           <Image
-                            src={producto.url_imagen || "/placeholder.svg?height=200&width=200&text=" + encodeURIComponent(producto.nombre)}
+                            src={getOptimizedImageUrl(producto.url_imagen, 400, 300) || getProductPlaceholder(producto.nombre, 400, 300)}
                             alt={producto.nombre}
-                            width={200}
-                            height={200}  
-                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                            width={400}
+                            height={300}
+                            loading="lazy"
+                            placeholder="blur"
+                            blurDataURL={LIGHT_BLUR_PLACEHOLDER}
+                            sizes="(max-width: 768px) 50vw, 33vw"
+                            className="w-full h-48 object-contain group-hover:scale-105 transition-transform duration-300"
                           />
                           <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">
                             {getBadgeText(producto)}
