@@ -15,10 +15,11 @@ import { formatCurrency } from "@/lib/utils/formatCurrency"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { empresa } from "@/lib/consts/empresa.data"
+import { getVariantLabel } from "@/types/kioskit"
+import { createOrder } from "@/lib/kioskit"
 
 export default function CarritoPage() {
   const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, getCartItemsCount } = useCart()
-  const [promoCode, setPromoCode] = useState("")
   const [fullName, setFullName] = useState("")
   const [ciRuc, setCiRuc] = useState("")
   const [address, setAddress] = useState("")
@@ -27,9 +28,6 @@ export default function CarritoPage() {
   const subtotal = getCartTotal()
   const total = subtotal + shipping
 
-  console.log(cart)
-
-  // Persistencia en localStorage de los datos del checkout
   useEffect(() => {
     try {
       const raw = localStorage.getItem('pp_checkout')
@@ -44,8 +42,7 @@ export default function CarritoPage() {
 
   useEffect(() => {
     try {
-      const payload = JSON.stringify({ fullName, ciRuc, address })
-      localStorage.setItem('pp_checkout', payload)
+      localStorage.setItem('pp_checkout', JSON.stringify({ fullName, ciRuc, address }))
     } catch {}
   }, [fullName, ciRuc, address])
 
@@ -55,15 +52,15 @@ export default function CarritoPage() {
 
   function buildWhatsappMessage() {
     const lines: string[] = []
-    lines.push(`Nuevo pedido desde la web`) 
+    lines.push(`Nuevo pedido desde la web`)
     lines.push(`Nombre: ${fullName}`)
     lines.push(`CI/RUC: ${ciRuc}`)
     lines.push(`Dirección: ${address}`)
     lines.push("")
     lines.push(`Items:`)
     cart.forEach((item, idx) => {
-      const sabor = item.sabor_seleccionado ? ` | Sabor: ${item.sabor_seleccionado.descripcion}` : ""
-      lines.push(`${idx + 1}. ${item.producto.nombre}${sabor} | Cant: ${item.quantity} | ${formatCurrency(item.producto.precio * item.quantity)}`)
+      const variantLabel = getVariantLabel(item.variant)
+      lines.push(`${idx + 1}. ${item.product.name} | ${variantLabel} | Cant: ${item.quantity} | ${formatCurrency(item.variant.price * item.quantity)}`)
     })
     lines.push("")
     lines.push(`Subtotal: ${formatCurrency(subtotal)}`)
@@ -81,32 +78,34 @@ export default function CarritoPage() {
       alert("Tu carrito está vacío.")
       return
     }
+
+    // Fire-and-forget order creation in Kioskit
+    createOrder({
+      customer_data: { name: fullName, phone: empresa.telefono, document_number: ciRuc, address },
+      items: cart.map(i => ({ variant_id: i.variant.id, quantity: i.quantity })),
+      payment_method: 'cash',
+      delivery_address: address,
+    }).catch(console.error)
+
     const phone = sanitizePhoneNumber(empresa.telefono)
     const text = encodeURIComponent(buildWhatsappMessage())
-    const url = `https://wa.me/${phone}?text=${text}`
-    window.open(url, "_blank")
+    window.open(`https://wa.me/${phone}?text=${text}`, "_blank")
   }
 
   if (cart.length === 0) {
     return (
       <div className="min-h-screen bg-white">
         <Header cartItems={getCartItemsCount()} />
-        
         <div className="container mx-auto px-4 py-16">
           <div className="text-center space-y-6">
             <ShoppingBag className="mx-auto h-24 w-24 text-gray-300" />
             <h1 className="font-anton text-3xl font-bold text-gray-900">Tu carrito está vacío</h1>
-            <p className="text-gray-600 font-roboto max-w-md mx-auto">
-              Parece que aún no has agregado ningún producto a tu carrito. ¡Explora nuestros productos premium!
-            </p>
+            <p className="text-gray-600 font-roboto max-w-md mx-auto">Parece que aún no has agregado ningún producto a tu carrito. ¡Explora nuestros productos premium!</p>
             <Link href="/productos">
-              <Button className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium px-8 py-3">
-                Ver Productos
-              </Button>
+              <Button className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium px-8 py-3">Ver Productos</Button>
             </Link>
           </div>
         </div>
-
         <Footer />
       </div>
     )
@@ -115,13 +114,11 @@ export default function CarritoPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header cartItems={getCartItemsCount()} />
-      
+
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <Link href="/productos" className="inline-flex items-center text-red-600 hover:text-red-700 mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Continuar Comprando
+            <ArrowLeft className="h-4 w-4 mr-2" />Continuar Comprando
           </Link>
           <h1 className="font-anton text-4xl font-bold text-gray-900">CARRITO DE COMPRAS</h1>
           <p className="text-gray-600 font-roboto">Revisa tus productos antes de proceder al checkout</p>
@@ -131,82 +128,58 @@ export default function CarritoPage() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => (
-              <Card key={`${item.producto.id}-${item.sabor_seleccionado?.id || 'no-sabor'}`} className="p-6">
+              <Card key={`${item.product.id}-${item.variant.id}`} className="p-6">
                 <div className="flex gap-4">
                   <div className="relative w-24 h-24 flex-shrink-0">
                     <Image
-                      src={item.producto.url_imagen || "/placeholder.svg?height=100&width=100&text=" + encodeURIComponent(item.producto.nombre)}
-                      alt={item.producto.nombre}
+                      src={item.product.image_url || "/placeholder.svg?height=100&width=100&text=" + encodeURIComponent(item.product.name)}
+                      alt={item.product.name}
                       fill
                       className="object-cover rounded-lg"
                     />
                   </div>
-                  
+
                   <div className="flex-1 space-y-2">
                     <div className="flex justify-between items-start">
                       <div>
-                          <h3 className="font-oswald text-lg font-bold text-gray-900">{item.producto.nombre}</h3>
-                        <p className="text-sm text-gray-600 font-oswald">{item.producto.categoria_info?.descripcion}</p>
-                        {item.sabor_seleccionado && (
-                          <p className="text-sm text-gray-500 font-oswald">Sabor: {item.sabor_seleccionado.descripcion}</p>
-                        )}
+                        <h3 className="font-oswald text-lg font-bold text-gray-900">{item.product.name}</h3>
+                        <p className="text-sm text-gray-600 font-oswald">{item.product.category_name}</p>
+                        <p className="text-sm text-gray-500 font-oswald">Variante: {getVariantLabel(item.variant)}</p>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeFromCart(item.producto.id, item.sabor_seleccionado?.id)}
+                        onClick={() => removeFromCart(item.product.id, item.variant.id)}
                         className="text-gray-400 hover:text-red-600"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    
+
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-3">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => updateQuantity(item.producto.id, item.sabor_seleccionado?.id, item.quantity - 1)}
-                          className="h-8 w-8"
-                        >
+                        <Button variant="outline" size="icon" onClick={() => updateQuantity(item.product.id, item.variant.id, item.quantity - 1)} className="h-8 w-8">
                           <Minus className="h-3 w-3" />
                         </Button>
                         <span className="font-medium w-8 text-center">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => updateQuantity(item.producto.id, item.sabor_seleccionado?.id, item.quantity + 1)}
-                          className="h-8 w-8"
-                        >
+                        <Button variant="outline" size="icon" onClick={() => updateQuantity(item.product.id, item.variant.id, item.quantity + 1)} className="h-8 w-8">
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
-                      
+
                       <div className="text-right">
-                        <p className="font-oswald text-xl font-bold text-red-600">
-                          {formatCurrency((item.producto.precio * item.quantity))}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {formatCurrency(item.producto.precio)} c/u
-                        </p>
+                        <p className="font-oswald text-xl font-bold text-red-600">{formatCurrency(item.variant.price * item.quantity)}</p>
+                        <p className="text-sm text-gray-500">{formatCurrency(item.variant.price)} c/u</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </Card>
             ))}
-            
+
             <div className="flex justify-between items-center pt-4">
-              <Button
-                variant="outline"
-                onClick={clearCart}
-                className="text-red-600 border-red-200 hover:bg-red-50"
-              >
-                Vaciar Carrito
-              </Button>
-              <p className="text-sm text-gray-500">
-                {getCartItemsCount()} {getCartItemsCount() === 1 ? 'producto' : 'productos'} en tu carrito
-              </p>
+              <Button variant="outline" onClick={clearCart} className="text-red-600 border-red-200 hover:bg-red-50">Vaciar Carrito</Button>
+              <p className="text-sm text-gray-500">{getCartItemsCount()} {getCartItemsCount() === 1 ? 'producto' : 'productos'} en tu carrito</p>
             </div>
           </div>
 
@@ -216,7 +189,6 @@ export default function CarritoPage() {
               <CardHeader className="p-0 mb-4">
                 <CardTitle className="font-anton text-xl">Resumen del Pedido</CardTitle>
               </CardHeader>
-              
               <CardContent className="p-0 space-y-4">
                 <div className="space-y-3">
                   <div>
@@ -237,52 +209,36 @@ export default function CarritoPage() {
                   <span className="font-roboto">Subtotal</span>
                   <span className="font-medium">{formatCurrency(subtotal)}</span>
                 </div>
-                
                 <div className="flex justify-between">
                   <span className="font-roboto">Envío</span>
-                  <span className="font-medium">
-                    {shipping === 0 ? 'Gratis' : `${formatCurrency(shipping)}`}
-                  </span>
+                  <span className="font-medium">{shipping === 0 ? 'Gratis' : formatCurrency(shipping)}</span>
                 </div>
-                
-                {shipping === 0 && subtotal > 0 && ( // TODO: Cambiar a por cantidad de productos
-                  <p className="text-sm text-green-600">
-                    ¡Felicidades! Tu pedido califica para envío gratis
-                  </p>
+                {shipping === 0 && subtotal > 0 && (
+                  <p className="text-sm text-green-600">¡Felicidades! Tu pedido califica para envío gratis</p>
                 )}
-                
                 <Separator />
-                
                 <div className="flex justify-between text-lg font-bold">
                   <span className="font-anton">Total</span>
                   <span className="font-anton text-red-600">{formatCurrency(total)}</span>
                 </div>
-                
-                <div className="space-y-3 pt-4">
+                <div className="pt-4">
                   <Button onClick={handleCheckoutWhatsapp} className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3">
                     Enviar pedido por WhatsApp
                   </Button>
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Trust Badges */}
+
             <Card className="p-6">
               <div className="space-y-4">
                 <h3 className="font-anton text-lg font-bold">Compra Segura</h3>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Pago 100% seguro</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Garantía de satisfacción</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Soporte 24/7</span>
-                  </div>
+                  {["Pago 100% seguro", "Garantía de satisfacción", "Soporte 24/7"].map((t) => (
+                    <div key={t} className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span>{t}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </Card>

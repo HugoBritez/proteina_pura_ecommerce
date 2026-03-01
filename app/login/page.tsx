@@ -2,12 +2,12 @@
 
 import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { toast } from '@/hooks/use-toast'
+import { adminLogin, ADMIN_TOKEN_KEY } from '@/lib/kioskitAdmin'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -20,8 +20,8 @@ function LoginForm() {
     e.preventDefault()
     try {
       setLoading(true)
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) throw error
+      const { access_token } = await adminLogin(email, password)
+      sessionStorage.setItem(ADMIN_TOKEN_KEY, access_token)
       const redirectTo = search.get('redirectTo') || '/admin'
       router.replace(redirectTo)
     } catch (e: any) {
@@ -62,22 +62,12 @@ export default function LoginPage() {
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <h1 className="text-xl font-semibold">Iniciar sesión</h1>
-          </CardHeader>
+          <CardHeader><h1 className="text-xl font-semibold">Iniciar sesión</h1></CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" disabled />
-              </div>
-              <div className="space-y-2">
-                <Label>Contraseña</Label>
-                <Input type="password" disabled />
-              </div>
-              <Button disabled className="w-full">
-                Cargando...
-              </Button>
+              <div className="space-y-2"><Label>Email</Label><Input type="email" disabled /></div>
+              <div className="space-y-2"><Label>Contraseña</Label><Input type="password" disabled /></div>
+              <Button disabled className="w-full">Cargando...</Button>
             </div>
           </CardContent>
         </Card>
@@ -87,5 +77,3 @@ export default function LoginPage() {
     </Suspense>
   )
 }
-
-

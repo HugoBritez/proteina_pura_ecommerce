@@ -4,5 +4,6 @@ export const empresa = {
     email: "proteinapurapy@gmail.com",
     direccion: "Dr.Blas Garay, Cnel. Oviedo 050101, Paraguay",
     logo: "./src/assets/media/logo_principal.png",
-    api_url: "http://localhost:3000"
+    api_url: "http://localhost:3000",
+    tenant_slug: process.env.NEXT_PUBLIC_KIOSKIT_TENANT_SLUG ?? "proteina-pura",
 }

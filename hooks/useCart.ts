@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import type { CartItem, ProductoConDetalles, Sabor } from '@/types/database'
+import type { CartItem, KioskitProduct, KioskitVariant } from '@/types/kioskit'
 
 const CART_STORAGE_KEY = 'proteina-pura-cart'
 
@@ -9,27 +9,23 @@ export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Cargar carrito desde localStorage al inicializar
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem(CART_STORAGE_KEY)
       if (savedCart) {
         const parsedCart = JSON.parse(savedCart)
-        // Validar que sea un array
         if (Array.isArray(parsedCart)) {
           setCart(parsedCart)
         }
       }
     } catch (error) {
       console.error('Error loading cart from localStorage:', error)
-      // Limpiar localStorage corrupto
       localStorage.removeItem(CART_STORAGE_KEY)
     } finally {
       setIsLoading(false)
     }
   }, [])
 
-  // Guardar carrito en localStorage cuando cambie
   useEffect(() => {
     if (!isLoading) {
       try {
@@ -40,52 +36,37 @@ export function useCart() {
     }
   }, [cart, isLoading])
 
-  const addToCart = useCallback((producto: ProductoConDetalles, sabor?: Sabor) => {
-    console.log('useCart: addToCart called for:', producto.nombre, 'sabor:', sabor?.descripcion)
+  const addToCart = useCallback((product: KioskitProduct, variant: KioskitVariant) => {
+    const key = `${product.id}-${variant.id}`
     setCart(prevCart => {
-      console.log('useCart: Current cart items:', prevCart.length)
-      const existingItemIndex = prevCart.findIndex(
-        item => item.producto.id === producto.id &&
-                 item.sabor_seleccionado?.id === sabor?.id
+      const existingIndex = prevCart.findIndex(
+        item => `${item.product.id}-${item.variant.id}` === key
       )
-
-      if (existingItemIndex > -1) {
-        // Si el producto ya existe, incrementar cantidad
-        console.log('useCart: Product exists, incrementing quantity from', prevCart[existingItemIndex].quantity, 'to', prevCart[existingItemIndex].quantity + 1)
-        const updatedCart = [...prevCart]
-        updatedCart[existingItemIndex].quantity += 1
-        return updatedCart
-      } else {
-        // Si es nuevo, agregarlo al carrito
-        console.log('useCart: Adding new product to cart')
-        return [...prevCart, {
-          producto,
-          quantity: 1,
-          sabor_seleccionado: sabor
-        }]
+      if (existingIndex > -1) {
+        const updated = [...prevCart]
+        updated[existingIndex] = { ...updated[existingIndex], quantity: updated[existingIndex].quantity + 1 }
+        return updated
       }
+      return [...prevCart, { product, variant, quantity: 1 }]
     })
   }, [])
 
-  const removeFromCart = useCallback((productId: number, saborId?: number) => {
-    setCart(prevCart => 
-      prevCart.filter(item => 
-        !(item.producto.id === productId && 
-          item.sabor_seleccionado?.id === saborId)
+  const removeFromCart = useCallback((productId: string, variantId: string) => {
+    setCart(prevCart =>
+      prevCart.filter(item =>
+        !(item.product.id === productId && item.variant.id === variantId)
       )
     )
   }, [])
 
-  const updateQuantity = useCallback((productId: number, saborId: number | undefined, newQuantity: number) => {
+  const updateQuantity = useCallback((productId: string, variantId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeFromCart(productId, saborId)
+      removeFromCart(productId, variantId)
       return
     }
-
     setCart(prevCart =>
       prevCart.map(item =>
-        item.producto.id === productId && 
-        item.sabor_seleccionado?.id === saborId
+        item.product.id === productId && item.variant.id === variantId
           ? { ...item, quantity: newQuantity }
           : item
       )
@@ -96,18 +77,15 @@ export function useCart() {
     setCart([])
   }, [])
 
-  // Memoizar cálculos costosos
   const cartTotal = useMemo(() => {
-    return cart.reduce((total, item) => total + (item.producto.precio * item.quantity), 0)
+    return cart.reduce((total, item) => total + (item.variant.price * item.quantity), 0)
   }, [cart])
 
   const cartItemsCount = useMemo(() => {
     return cart.reduce((total, item) => total + item.quantity, 0)
   }, [cart])
 
-  const isCartEmpty = useMemo(() => {
-    return cart.length === 0
-  }, [cart])
+  const isCartEmpty = useMemo(() => cart.length === 0, [cart])
 
   return {
     cart,
@@ -118,6 +96,6 @@ export function useCart() {
     clearCart,
     getCartTotal: () => cartTotal,
     getCartItemsCount: () => cartItemsCount,
-    isCartEmpty
+    isCartEmpty,
   }
 }
