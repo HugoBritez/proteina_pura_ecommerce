@@ -66,7 +66,14 @@ export interface CreateOrderData {
   notes?: string
 }
 
-export async function createOrder(data: CreateOrderData): Promise<void> {
+export interface OrderConfirmation {
+  order_id: string
+  order_number: string
+  total: number
+  status: string
+}
+
+export async function createOrder(data: CreateOrderData): Promise<OrderConfirmation> {
   const res = await fetch(`${API_URL}/public/${SLUG}/orders`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -76,4 +83,5 @@ export async function createOrder(data: CreateOrderData): Promise<void> {
     const j = await res.json().catch(() => ({}))
     throw new Error(j?.detail ?? `Order error ${res.status}`)
   }
+  return res.json() as Promise<OrderConfirmation>
 }
