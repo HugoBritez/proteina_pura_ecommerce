@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Filter, Search, CheckCircle } from 'lucide-react'
+import { Filter, Search, CheckCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Header } from "@/components/header"
@@ -20,6 +20,8 @@ import { getProductPrice, isProductAvailable } from "@/types/kioskit"
 import { ProductCard } from "@/components/productcard"
 import { Suspense } from "react"
 
+const PAGE_SIZE = 12
+
 function ProductsPageInner() {
   const [allProducts, setAllProducts] = useState<KioskitProduct[]>([])
   const [categorias, setCategorias] = useState<KioskitCategory[]>([])
@@ -29,6 +31,9 @@ function ProductsPageInner() {
   const [sortBy, setSortBy] = useState("default")
   const [searchQuery, setSearchQuery] = useState("")
   const [showOnlyInStock, setShowOnlyInStock] = useState(false)
+
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   const { addToCart, getCartItemsCount } = useCart()
   const searchParams = useSearchParams()
@@ -55,6 +60,27 @@ function ProductsPageInner() {
       .finally(() => setLoading(false))
   }, [])
 
+  // Reset visible count whenever filters/sort change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [selectedCategory, sortBy, searchQuery, showOnlyInStock])
+
+  // IntersectionObserver — load more when sentinel enters viewport
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleCount((prev) => prev + PAGE_SIZE)
+        }
+      },
+      { rootMargin: '300px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [loading])
+
   const filteredProducts = (() => {
     let products = searchQuery.trim()
       ? buscarProductos(searchQuery, allProducts)
@@ -77,6 +103,9 @@ function ProductsPageInner() {
       default: return 0
     }
   })
+
+  const visibleProducts = sortedProducts.slice(0, visibleCount)
+  const hasMore = visibleCount < sortedProducts.length
 
   const getBadgeText = (_producto: KioskitProduct) => null
 
@@ -210,17 +239,25 @@ function ProductsPageInner() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {sortedProducts.map((producto) => (
-                  <ProductCard
-                    key={producto.id}
-                    producto={producto}
-                    addToCart={addToCart}
-                    getBadgeText={getBadgeText}
-                    onAddToCart={handleAddToCart}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {visibleProducts.map((producto) => (
+                    <ProductCard
+                      key={producto.id}
+                      producto={producto}
+                      addToCart={addToCart}
+                      getBadgeText={getBadgeText}
+                      onAddToCart={handleAddToCart}
+                    />
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div ref={sentinelRef} className="flex justify-center py-10">
+                    <Loader2 className="h-6 w-6 animate-spin text-red-600" />
+                  </div>
+                )}
+              </>
             )}
 
             {sortedProducts.length === 0 && !loading && (
