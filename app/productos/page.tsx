@@ -155,6 +155,12 @@ function ProductsPageInner() {
           </div>
 
           <div className="flex-1">
+            <div className="flex justify-between items-center mb-3 lg:hidden">
+              <p className="text-sm text-gray-500 font-roboto">
+                {sortedProducts.length} de {allProducts.length} productos
+              </p>
+            </div>
+
             <div className="flex justify-between items-center mb-6 lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>

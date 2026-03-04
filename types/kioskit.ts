@@ -49,5 +49,5 @@ export function isProductAvailable(product: KioskitProduct): boolean {
 
 export function getVariantLabel(variant: KioskitVariant): string {
   const values = Object.values(variant.attributes)
-  return values.length > 0 ? values.join(', ') : variant.sku
+  return values.length > 0 ? values.join(', ') : 'Unidad'
 }

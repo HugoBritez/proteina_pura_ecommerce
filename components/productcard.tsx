@@ -73,12 +73,6 @@ export function ProductCard({
           <h3 className={`font-oswald text-xl font-bold ${isOutOfStock ? "text-gray-500" : "text-gray-900"}`}>
             {producto.name}
           </h3>
-          <p className={`font-roboto text-sm ${isOutOfStock ? "text-gray-400" : "text-gray-600"}`}>
-            {producto.description}
-          </p>
-          <div className={`flex justify-between text-sm ${isOutOfStock ? "text-gray-400" : "text-gray-500"}`}>
-            <span>Categoría: {producto.category_name}</span>
-          </div>
 
           {isOutOfStock ? (
             <div className="py-4 text-center">
@@ -116,16 +110,19 @@ export function ProductCard({
         </div>
 
         {!isOutOfStock && (
-          <div className="flex items-center gap-2">
-            <span className="font-anton text-2xl font-semi text-red-600">
-              {formatCurrency(price)}
-            </span>
-            {selectedVariant && (
-              <Badge variant="outline" className="text-xs">
-                {getVariantLabel(selectedVariant)}
-              </Badge>
-            )}
-          </div>
+          <>
+            <hr className="border-gray-100" />
+            <div className="flex items-center gap-2">
+              <span className="font-anton text-2xl font-semi text-red-600">
+                {formatCurrency(price)}
+              </span>
+              {selectedVariant && (
+                <Badge variant="outline" className="text-xs">
+                  {getVariantLabel(selectedVariant)}
+                </Badge>
+              )}
+            </div>
+          </>
         )}
       </CardContent>
 
@@ -145,9 +142,7 @@ export function ProductCard({
             className="w-full bg-gradient-to-r disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-300 from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium"
           >
             <Plus className="mr-2 h-4 w-4" />
-            {!selectedVariant
-              ? "Selecciona una variante"
-              : `Agregar ${getVariantLabel(selectedVariant)}`}
+            {!selectedVariant ? "Selecciona una variante" : "Agregar al carrito"}
           </Button>
         )}
       </CardFooter>

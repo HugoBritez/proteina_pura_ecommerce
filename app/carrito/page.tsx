@@ -184,7 +184,7 @@ export default function CarritoPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-8 lg:self-start">
             <Card className="p-6">
               <CardHeader className="p-0 mb-4">
                 <CardTitle className="font-anton text-xl">Resumen del Pedido</CardTitle>
