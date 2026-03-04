@@ -21,9 +21,11 @@ import { createOrder } from "@/lib/kioskit"
 export default function CarritoPage() {
   const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, getCartItemsCount } = useCart()
   const [fullName, setFullName] = useState("")
+  const [phone, setPhone] = useState("")
   const [ciRuc, setCiRuc] = useState("")
   const [address, setAddress] = useState("")
 
+  const hasStockIssues = cart.some((item) => item.quantity > item.variant.stock)
   const shipping = cart.length > 0 ? (getCartTotal() > 50000 ? 0 : 8000) : 0
   const subtotal = getCartTotal()
   const total = subtotal + shipping
@@ -32,8 +34,9 @@ export default function CarritoPage() {
     try {
       const raw = localStorage.getItem('pp_checkout')
       if (raw) {
-        const data = JSON.parse(raw) as { fullName?: string; ciRuc?: string; address?: string }
+        const data = JSON.parse(raw) as { fullName?: string; phone?: string; ciRuc?: string; address?: string }
         setFullName(data.fullName || "")
+        setPhone(data.phone || "")
         setCiRuc(data.ciRuc || "")
         setAddress(data.address || "")
       }
@@ -42,7 +45,7 @@ export default function CarritoPage() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('pp_checkout', JSON.stringify({ fullName, ciRuc, address }))
+      localStorage.setItem('pp_checkout', JSON.stringify({ fullName, phone, ciRuc, address }))
     } catch {}
   }, [fullName, ciRuc, address])
 
@@ -69,27 +72,36 @@ export default function CarritoPage() {
     return lines.join("\n")
   }
 
-  function handleCheckoutWhatsapp() {
-    if (!fullName.trim() || !ciRuc.trim() || !address.trim()) {
-      alert("Por favor completa nombre, CI/RUC y dirección para continuar.")
+  async function handleCheckoutWhatsapp() {
+    if (!fullName.trim() || !phone.trim() || !ciRuc.trim() || !address.trim()) {
+      alert("Por favor completa nombre, teléfono, CI/RUC y dirección para continuar.")
       return
     }
     if (cart.length === 0) {
       alert("Tu carrito está vacío.")
       return
     }
+    if (hasStockIssues) {
+      alert("Hay productos en tu carrito que superan el stock disponible. Por favor ajustá las cantidades.")
+      return
+    }
 
-    // Fire-and-forget order creation in Kioskit
-    createOrder({
-      customer_data: { name: fullName, phone: empresa.telefono, document_number: ciRuc, address },
-      items: cart.map(i => ({ variant_id: i.variant.id, quantity: i.quantity })),
-      payment_method: 'cash',
-      delivery_address: address,
-    }).catch(console.error)
+    // Register order in Kioskit before opening WhatsApp
+    try {
+      await createOrder({
+        customer_data: { name: fullName, phone, document_number: ciRuc, address },
+        items: cart.map(i => ({ variant_id: i.variant.id, quantity: i.quantity })),
+        payment_method: 'cash',
+        delivery_address: address,
+      })
+    } catch (e) {
+      console.error('createOrder failed:', e)
+      // Continue to WhatsApp even if Kioskit registration fails
+    }
 
-    const phone = sanitizePhoneNumber(empresa.telefono)
+    const waPhone = sanitizePhoneNumber(empresa.telefono)
     const text = encodeURIComponent(buildWhatsappMessage())
-    window.open(`https://wa.me/${phone}?text=${text}`, "_blank")
+    window.open(`https://wa.me/${waPhone}?text=${text}`, "_blank")
   }
 
   if (cart.length === 0) {
@@ -156,13 +168,25 @@ export default function CarritoPage() {
                       </Button>
                     </div>
 
-                    <div className="flex justify-between items-center">
+                    {item.quantity > item.variant.stock && (
+                      <p className="text-xs text-red-600 font-medium">
+                        ⚠️ Stock disponible: {item.variant.stock}
+                      </p>
+                    )}
+
+                  <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-3">
                         <Button variant="outline" size="icon" onClick={() => updateQuantity(item.product.id, item.variant.id, item.quantity - 1)} className="h-8 w-8">
                           <Minus className="h-3 w-3" />
                         </Button>
                         <span className="font-medium w-8 text-center">{item.quantity}</span>
-                        <Button variant="outline" size="icon" onClick={() => updateQuantity(item.product.id, item.variant.id, item.quantity + 1)} className="h-8 w-8">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => updateQuantity(item.product.id, item.variant.id, Math.min(item.quantity + 1, item.variant.stock))}
+                          disabled={item.quantity >= item.variant.stock}
+                          className="h-8 w-8"
+                        >
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>
@@ -196,6 +220,10 @@ export default function CarritoPage() {
                     <Input placeholder="Tu nombre y apellido" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   </div>
                   <div>
+                    <Label>Teléfono / WhatsApp</Label>
+                    <Input placeholder="0981 000 000" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  </div>
+                  <div>
                     <Label>CI o RUC</Label>
                     <Input placeholder="Documento o RUC" value={ciRuc} onChange={(e) => setCiRuc(e.target.value)} />
                   </div>
@@ -222,7 +250,16 @@ export default function CarritoPage() {
                   <span className="font-anton text-red-600">{formatCurrency(total)}</span>
                 </div>
                 <div className="pt-4">
-                  <Button onClick={handleCheckoutWhatsapp} className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3">
+                  {hasStockIssues && (
+                    <p className="text-xs text-red-600">
+                      ⚠️ Ajustá las cantidades antes de continuar
+                    </p>
+                  )}
+                  <Button
+                    onClick={handleCheckoutWhatsapp}
+                    disabled={hasStockIssues}
+                    className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     Enviar pedido por WhatsApp
                   </Button>
                 </div>
