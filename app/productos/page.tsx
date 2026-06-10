@@ -1,26 +1,114 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { Footer } from "@/components/footer"
+import { Header } from "@/components/header"
+import { ProductCard } from "@/components/productcard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Filter, Search, CheckCircle, Loader2 } from 'lucide-react'
+import { useCart } from "@/hooks/useCart"
+import { buscarProductos, getCategorias, getProductos } from "@/lib/kioskit"
+import type { KioskitCategory, KioskitProduct } from "@/types/kioskit"
+import { getProductPrice, isProductAvailable } from "@/types/kioskit"
+import { CheckCircle, Filter, Loader2, Search } from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Header } from "@/components/header"
-import { Footer } from "@/components/footer"
-import { getProductos, getCategorias, buscarProductos } from "@/lib/kioskit"
-import { useCart } from "@/hooks/useCart"
-import type { KioskitProduct, KioskitCategory } from "@/types/kioskit"
-import { getProductPrice, isProductAvailable } from "@/types/kioskit"
-import { ProductCard } from "@/components/productcard"
-import { Suspense } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 
 const PAGE_SIZE = 12
+
+function FilterSidebar({
+  searchQuery,
+  setSearchQuery,
+  categorias,
+  allProducts,
+  selectedCategory,
+  setSelectedCategory,
+  showOnlyInStock,
+  setShowOnlyInStock,
+  onClose
+}: {
+  searchQuery: string
+  setSearchQuery: (v: string) => void
+  categorias: KioskitCategory[]
+  allProducts: KioskitProduct[]
+  selectedCategory: string | null
+  setSelectedCategory: (v: string | null) => void
+  showOnlyInStock: boolean
+  setShowOnlyInStock: (v: boolean) => void
+  onClose?: () => void
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h3 className="font-oswald text-lg font-bold">Buscar</h3>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Buscar productos..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="font-oswald text-lg font-bold">Categorías</h3>
+        <div className="space-y-2">
+          <button
+            onClick={() => {
+              console.log("Selected category!")
+              setSelectedCategory(null);
+            }
+            }
+            className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedCategory === null ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"}`}
+          >
+            <div className="flex justify-between items-center">
+              <span className="font-roboto">Todas las Categorías</span>
+              <span className="text-sm text-muted-foreground">({allProducts.length})</span>
+            </div>
+          </button>
+          {categorias.map((cat) => {
+            const count = allProducts.filter(p => p.category_id === cat.id).length
+            return (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.id); if (onClose !== undefined) {
+                    onClose()
+                  }
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedCategory === cat.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"}`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-roboto">{cat.name}</span>
+                  <span className="text-sm text-muted-foreground">({count})</span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="font-oswald text-lg font-bold">Filtros</h3>
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="in-stock"
+            checked={showOnlyInStock}
+            onCheckedChange={(v) => setShowOnlyInStock(v as boolean)}
+          />
+          <Label htmlFor="in-stock" className="font-roboto text-sm">Solo en stock</Label>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function ProductsPageInner() {
   const [allProducts, setAllProducts] = useState<KioskitProduct[]>([])
@@ -35,11 +123,13 @@ function ProductsPageInner() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  const { addToCart, getCartItemsCount } = useCart()
+  const { addToCart, getCartItemsCount, cart } = useCart()
   const searchParams = useSearchParams()
 
   const [showCartFeedback, setShowCartFeedback] = useState(false)
   const [lastAddedProduct, setLastAddedProduct] = useState<string>("")
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false)
 
   const handleAddToCart = (productName: string) => {
     setLastAddedProduct(productName)
@@ -86,6 +176,8 @@ function ProductsPageInner() {
       ? buscarProductos(searchQuery, allProducts)
       : allProducts
 
+    products = products.filter(p => p.image_url)
+
     if (selectedCategory !== null) {
       products = products.filter(p => p.category_id === selectedCategory)
     }
@@ -109,78 +201,19 @@ function ProductsPageInner() {
 
   const getBadgeText = (_producto: KioskitProduct) => null
 
-  const FilterSidebar = () => (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h3 className="font-oswald text-lg font-bold">Buscar</h3>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Buscar productos..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h3 className="font-oswald text-lg font-bold">Categorías</h3>
-        <div className="space-y-2">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedCategory === null ? "bg-red-100 text-red-700 font-medium" : "hover:bg-gray-100"}`}
-          >
-            <div className="flex justify-between items-center">
-              <span className="font-roboto">Todas las Categorías</span>
-              <span className="text-sm text-gray-500">({allProducts.length})</span>
-            </div>
-          </button>
-          {categorias.map((cat) => {
-            const count = allProducts.filter(p => p.category_id === cat.id).length
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${selectedCategory === cat.id ? "bg-red-100 text-red-700 font-medium" : "hover:bg-gray-100"}`}
-              >
-                <div className="flex justify-between items-center">
-                  <span className="font-roboto">{cat.name}</span>
-                  <span className="text-sm text-gray-500">({count})</span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h3 className="font-oswald text-lg font-bold">Filtros</h3>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="in-stock"
-            checked={showOnlyInStock}
-            onCheckedChange={(v) => setShowOnlyInStock(v as boolean)}
-          />
-          <Label htmlFor="in-stock" className="font-roboto text-sm">Solo en stock</Label>
-        </div>
-      </div>
-    </div>
-  )
-
   return (
     <div className="min-h-screen bg-white">
       <Header cartItems={getCartItemsCount()} />
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="font-anton text-4xl font-bold text-gray-900 mb-2">NUESTROS PRODUCTOS</h1>
-          <p className="text-gray-600 font-roboto">Descubre nuestra gama completa de proteínas premium para maximizar tu rendimiento</p>
+          <h1 className="font-anton text-4xl font-bold text-foreground mb-2">NUESTROS PRODUCTOS</h1>
+          <p className="text-muted-foreground font-roboto">Suplementos importados. Sin vueltas.</p>
         </div>
 
         <div className="flex gap-8">
           <div className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-24"><FilterSidebar /></div>
+            <div className="sticky top-24"><FilterSidebar searchQuery={searchQuery} setSearchQuery={setSearchQuery} categorias={categorias} allProducts={allProducts} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} showOnlyInStock={showOnlyInStock} setShowOnlyInStock={setShowOnlyInStock} /></div>
           </div>
 
           <div className="flex-1">
@@ -191,14 +224,14 @@ function ProductsPageInner() {
             </div>
 
             <div className="flex justify-between items-center mb-6 lg:hidden">
-              <Sheet>
+              <Sheet open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" className="flex items-center gap-2">
                     <Filter className="h-4 w-4" />Filtros
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80">
-                  <div className="py-4"><FilterSidebar /></div>
+                  <div className="py-4"><FilterSidebar searchQuery={searchQuery} setSearchQuery={setSearchQuery} categorias={categorias} allProducts={allProducts} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} showOnlyInStock={showOnlyInStock} setShowOnlyInStock={setShowOnlyInStock} onClose={() => setIsSidebarOpen(false)} /></div>
                 </SheetContent>
               </Sheet>
               <Select value={sortBy} onValueChange={setSortBy}>
@@ -226,21 +259,20 @@ function ProductsPageInner() {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <Card key={i} className="animate-pulse">
-                    <CardHeader className="p-0"><div className="h-64 bg-gray-200 rounded-t-lg"></div></CardHeader>
-                    <CardContent className="p-6 space-y-4">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-full"></div>
-                      <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                    <CardHeader className="p-0"><div className="aspect-[3/4] bg-muted rounded-t-lg"></div></CardHeader>
+                    <CardContent className="p-3 space-y-2">
+                      <div className="h-3 bg-muted rounded w-3/4"></div>
+                      <div className="h-4 bg-muted rounded w-1/3"></div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {visibleProducts.map((producto) => (
                     <ProductCard
                       key={producto.id}
@@ -248,6 +280,7 @@ function ProductsPageInner() {
                       addToCart={addToCart}
                       getBadgeText={getBadgeText}
                       onAddToCart={handleAddToCart}
+                      cartItems={cart}
                     />
                   ))}
                 </div>
