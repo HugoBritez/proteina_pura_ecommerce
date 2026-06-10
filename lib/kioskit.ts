@@ -3,10 +3,20 @@ import type { KioskitProduct, KioskitCategory } from '@/types/kioskit'
 const API_URL = process.env.NEXT_PUBLIC_KIOSKIT_API_URL!
 const SLUG = process.env.NEXT_PUBLIC_KIOSKIT_TENANT_SLUG!
 
+// Simple in-memory cache to avoid refetching on back navigation
+const cache = new Map<string, { data: unknown; ts: number }>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
 async function apiFetch<T>(path: string): Promise<T> {
+  const cached = cache.get(path)
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return cached.data as T
+  }
   const res = await fetch(`${API_URL}${path}`, { next: { revalidate: 60 } })
   if (!res.ok) throw new Error(`Kioskit API error: ${res.status} ${path}`)
-  return res.json() as Promise<T>
+  const data = await res.json() as T
+  cache.set(path, { data, ts: Date.now() })
+  return data
 }
 
 export async function getProductos(): Promise<KioskitProduct[]> {
@@ -40,6 +50,11 @@ export async function getCategorias(): Promise<KioskitCategory[]> {
 export async function getProductosDestacados(): Promise<KioskitProduct[]> {
   const all = await getProductos()
   return all.slice(0, 6)
+}
+
+export async function getProductoById(id: string): Promise<KioskitProduct | null> {
+  const all = await getProductos()
+  return all.find(p => p.id === id) ?? null
 }
 
 /** Client-side search over name + description */
