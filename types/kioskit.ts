@@ -48,6 +48,6 @@ export function isProductAvailable(product: KioskitProduct): boolean {
 }
 
 export function getVariantLabel(variant: KioskitVariant): string {
-  const values = Object.values(variant.attributes)
+  const values = Object.values(variant.attributes).filter(v => !/^#[0-9a-fA-F]/.test(v))
   return values.length > 0 ? values.join(', ') : 'Unidad'
 }

@@ -25,7 +25,7 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: "Proteína Pura - Suplementos Deportivos Premium",
-  description: "Descubre las mejores proteínas y suplementos deportivos. Calidad premium para atletas serios. Envío gratis en Colombia.",
+  description: "Descubre las mejores proteínas y suplementos deportivos. Calidad premium para atletas serios. Envíos a todo Paraguay en 24-48hs.",
   keywords: "proteína, whey protein, suplementos deportivos, nutrición deportiva, fitness, culturismo",
     generator: 'v0.dev'
 }
