@@ -342,7 +342,7 @@ export default function HomePage() {
       )}
 
       {/* Floating WhatsApp */}
-      <Link href={`https://wa.me/${empresa.telefono.replace(/\s/g, '')}`} target="_blank" aria-label="Asesoría por WhatsApp" className="fixed bottom-6 right-6 z-50 group">
+      <Link href={`https://wa.me/${empresa.telefono.replace(/\s/g, '')}`} target="_blank" aria-label="Asesoría por WhatsApp" className="fixed bottom-32 right-6 z-50 group">
         <div className="relative">
           <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
           <Button className="relative rounded-full h-16 w-16 p-0 shadow-xl bg-green-500 hover:bg-green-600 transition-all duration-300 group-hover:scale-110">
@@ -404,19 +404,19 @@ function QuizSection({ router }: { router: ReturnType<typeof useRouter> }) {
         <p className="text-center text-muted-foreground font-roboto mb-6">¿Cuál es tu objetivo principal?</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {objetivos.map((o) => {
-              const Icon = o.icon
-              return (
-            <button
-              key={o.id}
-              onClick={() => { setObjetivo(o.id); setStep(1) }}
-              className="p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 text-left transition-all duration-200 group"
-            >
-              <Icon className="h-6 w-6 text-primary mb-2" />
-              <h3 className="font-oswald font-semibold text-foreground">{o.label}</h3>
-              <p className="text-sm text-muted-foreground font-roboto mt-1">{o.desc}</p>
-            </button>
-              )
-            })}
+            const Icon = o.icon
+            return (
+              <button
+                key={o.id}
+                onClick={() => { setObjetivo(o.id); setStep(1) }}
+                className="p-4 rounded-xl border border-border hover:border-primary hover:bg-primary/5 text-left transition-all duration-200 group"
+              >
+                <Icon className="h-6 w-6 text-primary mb-2" />
+                <h3 className="font-oswald font-semibold text-foreground">{o.label}</h3>
+                <p className="text-sm text-muted-foreground font-roboto mt-1">{o.desc}</p>
+              </button>
+            )
+          })}
         </div>
         <div className="text-center mt-6">
           <button onClick={() => router.push("/productos")} className="text-primary font-roboto text-sm hover:underline">
